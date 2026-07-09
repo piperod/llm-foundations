@@ -4,9 +4,9 @@
 **Previously.** Chunk 07 covered decoding and sampling — the mechanics of how a model turns probabilities into the actual words you see, token by token.
 **Today.** Why the words that decoding produces can be fluent, well-formed, and simply wrong — and what's known about detecting or reducing that.
 
-![Calibration plot: a dashed diagonal shows perfect calibration where stated confidence matches actual accuracy; the solid curve shows a typical model sitting below that line, i.e. overconfident.](figures/08-calibration-plot.svg)
+![Calibration curves for language models of various sizes on BIG Bench multiple-choice tasks, with a dashed diagonal line indicating perfect calibration (stated confidence matches actual accuracy).](https://ar5iv.labs.arxiv.org/html/2207.05221/assets/x5.png)
 
-*Figure 1: Good calibration means confidence matches accuracy. Models commonly sit below the diagonal — sounding more sure than their answers actually are.*
+*Figure 1: Calibration curves for various model sizes on multiple-choice tasks from BIG Bench, with a dashed line marking perfect calibration. Source: "Language Models (Mostly) Know What They Know," Kadavath et al., Anthropic, 2022 (Figure 4, left panel) — https://ar5iv.labs.arxiv.org/html/2207.05221.*
 
 ---
 

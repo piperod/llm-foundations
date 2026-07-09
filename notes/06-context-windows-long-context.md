@@ -4,9 +4,9 @@
 **Previously.** Chunk 05 covered in-context learning and prompting theory — how examples and instructions inside the prompt steer behavior.
 **Today.** We look at the container those instructions live in: its size, its cost (the KV cache), and its uneven attention across position ("lost in the middle").
 
-![U-shaped curve showing retrieval accuracy is highest for facts near the beginning or end of the context, and lowest for facts buried in the middle.](figures/06-lost-in-the-middle.svg)
+![U-shaped chart showing model accuracy as a function of the position of the relevant document within the input context, peaking when the relevant information is at the very start or end and dropping sharply in the middle.](https://ar5iv.labs.arxiv.org/html/2307.03172/assets/x1.png)
 
-*Figure 1: The "lost in the middle" effect — models recall information placed at the start or end of a long context more reliably than information buried in the middle.*
+*Figure 1: Changing the position of the relevant passage within the input context produces a U-shaped performance curve — models use relevant information best at the beginning (primacy bias) or end (recency bias) of the context, and performance drops significantly when it's in the middle. Source: "Lost in the Middle: How Language Models Use Long Contexts", Liu et al., 2023 — https://ar5iv.labs.arxiv.org/html/2307.03172.*
 
 ---
 

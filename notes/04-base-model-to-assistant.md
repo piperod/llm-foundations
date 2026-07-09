@@ -4,9 +4,9 @@
 **Previously.** Chunk 03 covered pretraining and scaling laws: how a base model learns to predict text from massive raw corpora.
 **Today.** How that base model gets adapted — through demonstration data, human/AI feedback, and preference optimization — into something like ChatGPT or Claude.
 
-![Pipeline from pretrained base model through supervised fine-tuning and RLHF/Constitutional AI/DPO to an assistant model.](figures/04-base-to-assistant-pipeline.svg)
+![Diagram of the three-step InstructGPT pipeline: (1) collect demonstration data and train a supervised policy via SFT, (2) collect comparison data and train a reward model, (3) optimize the policy against the reward model using PPO.](https://ar5iv.labs.arxiv.org/html/2203.02155/assets/x2.png)
 
-*Figure 1: Each post-training stage changes what the model optimizes for — from "continue this text plausibly" to "follow this instruction the way a helpful, consistent assistant would."*
+*Figure 1: The three-step RLHF pipeline used to turn GPT-3 into InstructGPT — SFT on demonstrations, reward model training on ranked comparisons, then PPO to optimize the policy against the reward model. Source: Ouyang et al., "Training Language Models to Follow Instructions with Human Feedback," OpenAI, 2022 — https://ar5iv.labs.arxiv.org/html/2203.02155 (Figure 2).*
 
 ---
 

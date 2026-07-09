@@ -4,9 +4,9 @@
 **Previously.** Chunk 00 established that a language model's core job is next-token prediction — a probability distribution over "what comes next."
 **Today.** We open up what "token" actually means, why it isn't a word, how subword tokenization (BPE, SentencePiece) builds a vocabulary, and how tokens are mapped to vectors before any computation happens.
 
-![From text to vectors: raw text is split into subword tokens, mapped to token IDs, then looked up as embedding vectors.](figures/01-text-to-vectors.svg)
+![Color-coded embedding vectors for the words queen, woman, girl, boy, man, king, queen, and water, each shown as a row of 50 colored cells representing vector dimension values.](https://jalammar.github.io/images/word2vec/queen-woman-girl-embeddings.png)
 
-*Figure 1: Tokenization breaks text into subword units; each token ID maps to a learned embedding vector.*
+*Figure 1: Each word is represented as a vector of numbers (color-coded by value), and words with related meanings share similar patterns across dimensions. Source: "The Illustrated Word2vec," Jay Alammar, 2019 — https://jalammar.github.io/illustrated-word2vec/.*
 
 ---
 

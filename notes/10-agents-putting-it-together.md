@@ -4,9 +4,9 @@
 **Previously.** Chunk 09 covered retrieval-augmented generation and tool use — giving a model the ability to look things up or take actions outside its own weights.
 **Today.** We cover the agent loop itself (plan, act, observe, repeat), planning/decomposition strategies, memory across steps, self-correction, how to evaluate agents, and the specific failure modes — error compounding, context rot, and drift — that only appear once you chain many LLM calls together. This is the capstone chunk: it doesn't introduce new mechanisms so much as show how the mechanisms from every prior chunk interact and amplify each other over many steps.
 
-![A cyclic diagram: Plan leads to Act, then Observe, then Update context, then back to Plan — with a callout noting that context grows every cycle, risking error compounding, context rot, and drift.](figures/10-agent-loop.svg)
+![Anthropic's "Autonomous agent" diagram: an LLM calls tools in a loop based on environmental feedback, with a human able to provide input, continuing until the task is complete.](https://www-cdn.anthropic.com/images/4zrzovbb/website/58d9f10c985c4eb5d53798dea315f7bb5ab6249e-2401x1000.png)
 
-*Figure 1: The agent loop — every mechanism from earlier chunks (tokenization cost, attention limits, alignment, in-context learning, context windows, decoding, hallucination, tool use) reappears here, now repeating and compounding every cycle.*
+*Figure 1: Anthropic's canonical "autonomous agent" diagram — an LLM in a loop, calling tools based on feedback from its environment until the task is complete. Source: "Building Effective AI Agents," Erik Schluntz and Barry Zhang, Anthropic, Dec 2024 — https://www.anthropic.com/research/building-effective-agents.*
 
 ---
 

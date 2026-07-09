@@ -4,9 +4,9 @@
 **Previously.** Chunk 04 covered how a base model is turned into an assistant via SFT/RLHF, i.e., changes made *to the weights* before you ever open a chat window.
 **Today.** We look at what happens *after* training is frozen: how the specific prompt you write in the moment steers behavior at inference time, and the mechanistic and statistical theories that explain why this works at all.
 
-![An induction head finds an earlier occurrence of the current token, notes what followed it, and predicts that it follows again.](figures/05-induction-head.svg)
+![Accuracy on a synthetic word-unscrambling task as a function of the number of in-context examples, comparing zero-shot/one-shot/few-shot regimes and model sizes (1.3B, 13B, 175B parameters), with and without a natural language prompt.](https://ar5iv.labs.arxiv.org/html/2005.14165/assets/graphs/img/in_context_learning.png)
 
-*Figure 1: The core induction-head mechanism behind in-context learning — find a matching earlier token, copy what came after it.*
+*Figure 1: Larger models make increasingly efficient use of in-context information — few-shot accuracy rises with the number of in-context examples, and the effect is far more pronounced for the largest (175B) model. Source: "Language Models are Few-Shot Learners" (GPT-3 paper), Brown et al., 2020 — https://ar5iv.labs.arxiv.org/html/2005.14165.*
 
 ---
 

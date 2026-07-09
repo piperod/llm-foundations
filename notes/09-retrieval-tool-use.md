@@ -4,9 +4,9 @@
 **Previously.** Chunk 08 covered hallucination, calibration, and why a model's stated confidence often doesn't track its actual correctness.
 **Today.** One major practical mitigation for that problem: retrieval-augmented generation (RAG) and tool use, including ReAct-style reasoning+acting and how tool-calling behavior gets trained or elicited.
 
-![A query goes to a retriever that searches documents or tools, returns results to a generator LLM, which produces an answer — and may loop back to retrieve/call again.](figures/09-rag-tool-loop.svg)
+![RAG architecture diagram: a query encoder and document index feed a Maximum Inner Product Search retriever, which passes top-K retrieved documents to a seq2seq generator that produces the final prediction.](https://ar5iv.labs.arxiv.org/html/2005.11401/assets/x1.png)
 
-*Figure 1: Retrieval and tool use both insert an external lookup/action step between the query and the model's final answer, and the loop can repeat (ReAct-style) rather than running just once.*
+*Figure 1: Overview of the RAG architecture — a pre-trained retriever (query encoder + document index, using MIPS to find top-K documents) is combined with a pre-trained seq2seq generator and fine-tuned end-to-end. Source: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks," Lewis et al., 2020 — https://ar5iv.labs.arxiv.org/html/2005.11401.*
 
 ---
 

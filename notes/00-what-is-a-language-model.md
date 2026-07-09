@@ -4,9 +4,9 @@
 **Previously.** Nothing. This is the start of the curriculum; there is no prior chunk to bridge from.
 **Today.** What "next-token prediction" means, why it's the entire training objective behind every LLM you've used, and why calling that objective "just autocomplete" is simultaneously accurate and deeply misleading.
 
-![The next-token loop: context feeds a model, which outputs a probability distribution over candidate next tokens; the sampled token is appended and the process repeats.](figures/00-next-token-loop.svg)
+![Output token probabilities (logits) for GPT-2: a score for every token in the 50,257-token vocabulary, from "aardvark" to "zyzzyva," showing the model's full probability distribution over the next token.](https://jalammar.github.io/images/gpt2/gpt2-output-scores-2.png)
 
-*Figure 1: Generating one token conditions on everything before it; the chosen token is appended to the context and the loop repeats.*
+*Figure 1: After processing the input, the model assigns a probability (logit) score to every token in its vocabulary — this ranked distribution is what gets sampled from to pick the next token. Source: "The Illustrated GPT-2 (Visualizing Transformer Language Models)," Jay Alammar, 2019 — https://jalammar.github.io/illustrated-gpt2/.*
 
 ---
 

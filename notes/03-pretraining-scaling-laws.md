@@ -4,9 +4,9 @@
 **Previously.** Chunk 02 covered the transformer and self-attention — the architecture that processes a sequence of tokens.
 **Today.** How that architecture gets trained at internet scale, and what "scaling laws" say about the relationship between model size, data size, compute, and resulting capability.
 
-![Schematic log-log chart showing training loss decreasing smoothly as compute increases, illustrating the shape of a scaling law.](figures/03-scaling-law-schematic.svg)
+![Three log-log panels showing test loss decreasing smoothly as a power law with compute, dataset size, and number of parameters, from Kaplan et al. 2020.](https://ar5iv.labs.arxiv.org/html/2001.08361/assets/x1.png)
 
-*Figure 1: Schematic illustration of a scaling-law curve — loss falls predictably as compute grows, flattening but not hitting a hard floor. Not real measured data; see the references below for actual curves.*
+*Figure 1: Test loss falls as a smooth power law with each of compute, dataset size, and model parameters, holding across seven orders of magnitude. Source: "Scaling Laws for Neural Language Models," Kaplan, McCandlish, Henighan, et al. (OpenAI, 2020) — https://ar5iv.labs.arxiv.org/html/2001.08361.*
 
 ---
 
