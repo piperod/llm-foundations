@@ -1,3 +1,9 @@
+---
+title: "07 · Decoding & Sampling"
+parent: Chunks
+nav_order: 8
+---
+
 # Chunk 07: Decoding & Sampling
 
 **Purpose.** Explain how a language model turns a probability distribution over "next token" into an actual chosen token — and why this single step is the root cause of non-deterministic LLM output.

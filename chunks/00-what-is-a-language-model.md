@@ -1,3 +1,9 @@
+---
+title: "00 · What is a Language Model"
+parent: Chunks
+nav_order: 1
+---
+
 # Chunk 00: What is a Language Model
 
 **Purpose.** Build a correct, load-bearing mental model of what a language model actually is — a learned probability distribution over the next token — before we touch tokenization, transformer architecture, or training.

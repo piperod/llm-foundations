@@ -1,3 +1,9 @@
+---
+title: "04 · From Base Model to Assistant"
+parent: Chunks
+nav_order: 5
+---
+
 # Chunk 04: From Base Model to Assistant
 
 **Purpose.** Explain the post-training pipeline — SFT, RLHF, Constitutional AI, and DPO — that turns a raw next-token predictor into a chat assistant with instruction-following behavior and a consistent "personality."

@@ -1,3 +1,9 @@
+---
+title: "10 · Agents — Putting It Together"
+parent: Chunks
+nav_order: 11
+---
+
 # Chunk 10: Agents — Putting It Together
 
 **Purpose.** Synthesize the entire curriculum into a single picture: an "agent" is not a new kind of model, it's an LLM wrapped in a loop, repeatedly deciding what to do next — and every mechanism from chunks 00-09 shapes how that loop succeeds or fails.

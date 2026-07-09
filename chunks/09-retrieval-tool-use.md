@@ -1,3 +1,9 @@
+---
+title: "09 · Retrieval-Augmented Generation & Tool Use"
+parent: Chunks
+nav_order: 10
+---
+
 # Chunk 09: Retrieval-Augmented Generation & Tool Use
 
 **Purpose.** Explain how giving a model external retrieval or callable tools — instead of relying only on what it memorized during pretraining — changes what it can reliably do, and how models are trained or prompted to invoke tools mid-generation.

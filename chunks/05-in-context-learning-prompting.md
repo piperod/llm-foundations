@@ -1,3 +1,9 @@
+---
+title: "05 · In-Context Learning & Prompting Theory"
+parent: Chunks
+nav_order: 6
+---
+
 # Chunk 05: In-Context Learning & Prompting Theory
 
 **Purpose.** Explain why the words you put in a prompt — instructions, examples, ordering — change what an already-trained model does, even though no weights are updated.

@@ -1,3 +1,9 @@
+---
+title: "03 · Pretraining & Scaling Laws"
+parent: Chunks
+nav_order: 4
+---
+
 # Chunk 03: Pretraining & Scaling Laws
 
 **Purpose.** Explain what "pretraining" actually is (predicting the next token over enormous text corpora) and why bigger models trained on more data reliably get better, in a way that's been measured and can be predicted in advance.

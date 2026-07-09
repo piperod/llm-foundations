@@ -1,3 +1,9 @@
+---
+title: "02 · The Transformer & Attention"
+parent: Chunks
+nav_order: 3
+---
+
 # Chunk 02: The Transformer & Attention
 
 **Purpose.** Understand the mechanism — self-attention — that lets a model weigh every token against every other token, and why this replaced recurrent processing as the default architecture for language models.

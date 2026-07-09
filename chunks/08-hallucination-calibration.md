@@ -1,3 +1,9 @@
+---
+title: "08 · Hallucination, Calibration & Uncertainty"
+parent: Chunks
+nav_order: 9
+---
+
 # Chunk 08: Hallucination, Calibration & Uncertainty
 
 **Purpose.** Explain why LLMs generate confident-sounding but false content ("hallucination"), what it means for a model to be well-calibrated, and what research shows about getting models to express uncertainty honestly.

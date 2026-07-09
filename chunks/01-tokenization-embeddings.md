@@ -1,3 +1,9 @@
+---
+title: "01 · Tokenization & Embeddings"
+parent: Chunks
+nav_order: 2
+---
+
 # Chunk 01: Tokenization & Embeddings
 
 **Purpose.** Understand how raw text is converted into the discrete units ("tokens") a language model actually predicts, and how those tokens become the numeric vectors ("embeddings") the model computes over.

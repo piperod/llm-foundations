@@ -1,3 +1,9 @@
+---
+title: "06 · Context Windows & Long-Context Behavior"
+parent: Chunks
+nav_order: 7
+---
+
 # Chunk 06: Context Windows & Long-Context Behavior
 
 **Purpose.** Establish how much text a model can actually attend to at once, and why "the context window is 200K tokens" is a much weaker guarantee than it sounds like.
