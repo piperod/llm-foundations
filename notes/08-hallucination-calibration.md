@@ -4,6 +4,10 @@
 **Previously.** Chunk 07 covered decoding and sampling — the mechanics of how a model turns probabilities into the actual words you see, token by token.
 **Today.** Why the words that decoding produces can be fluent, well-formed, and simply wrong — and what's known about detecting or reducing that.
 
+![Calibration plot: a dashed diagonal shows perfect calibration where stated confidence matches actual accuracy; the solid curve shows a typical model sitting below that line, i.e. overconfident.](figures/08-calibration-plot.svg)
+
+*Figure 1: Good calibration means confidence matches accuracy. Models commonly sit below the diagonal — sounding more sure than their answers actually are.*
+
 ---
 
 ## Beginner

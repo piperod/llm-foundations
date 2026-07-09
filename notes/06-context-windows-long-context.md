@@ -4,6 +4,10 @@
 **Previously.** Chunk 05 covered in-context learning and prompting theory — how examples and instructions inside the prompt steer behavior.
 **Today.** We look at the container those instructions live in: its size, its cost (the KV cache), and its uneven attention across position ("lost in the middle").
 
+![U-shaped curve showing retrieval accuracy is highest for facts near the beginning or end of the context, and lowest for facts buried in the middle.](figures/06-lost-in-the-middle.svg)
+
+*Figure 1: The "lost in the middle" effect — models recall information placed at the start or end of a long context more reliably than information buried in the middle.*
+
 ---
 
 ## Beginner

@@ -4,6 +4,10 @@
 **Previously.** Chunk 01 turned text into tokens and then into vectors (embeddings) that encode meaning as position in a high-dimensional space.
 **Today.** How a sequence of those vectors actually gets processed: the attention mechanism, multi-head attention, positional encoding, and the transformer block that stacks them.
 
+![One transformer block: input embeddings flow through multi-head self-attention and a feed-forward network, each followed by add-and-norm, repeated across many layers.](figures/02-transformer-block.svg)
+
+*Figure 1: A single transformer block; the real model stacks many of these in sequence. The inset shows an illustrative attention-weight matrix — which earlier tokens the current token is "looking at."*
+
 ---
 
 ## Beginner

@@ -4,6 +4,10 @@
 **Previously.** Chunk 06 covered context windows and how models behave as input grows toward and past their context limit.
 **Today.** We cover greedy decoding, temperature, top-k, and top-p (nucleus) sampling — the mechanics of picking a token — and why "the same prompt" can produce different answers.
 
+![Bar chart of candidate next-token probabilities, with the low-probability tail grayed out to show what top-p/top-k sampling excludes before drawing a token.](figures/07-sampling-distribution.svg)
+
+*Figure 1: The model outputs a full probability distribution over candidate tokens; decoding strategy determines which of them are even eligible to be sampled.*
+
 ---
 
 ## Beginner

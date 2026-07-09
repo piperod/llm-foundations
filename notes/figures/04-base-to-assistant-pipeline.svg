@@ -1,0 +1,45 @@
+<svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <text x="400" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#1f2937">From Base Model to Assistant</text>
+
+  <!-- Box 1: Pretrained base model -->
+  <rect x="20" y="160" width="160" height="80" rx="6" fill="#f3f4f6" stroke="#64748b" stroke-width="1.5"/>
+  <text x="100" y="195" text-anchor="middle" font-size="14" fill="#1f2937">Pretrained</text>
+  <text x="100" y="213" text-anchor="middle" font-size="14" fill="#1f2937">base model</text>
+  <text x="100" y="260" text-anchor="middle" font-size="12" font-style="italic" fill="#1f2937">completes/continues text</text>
+
+  <!-- Arrow 1 -->
+  <line x1="180" y1="200" x2="216" y2="200" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Box 2: SFT -->
+  <rect x="220" y="160" width="170" height="80" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="305" y="190" text-anchor="middle" font-size="14" fill="#1f2937">Supervised</text>
+  <text x="305" y="208" text-anchor="middle" font-size="14" fill="#1f2937">Fine-Tuning (SFT)</text>
+  <text x="305" y="260" text-anchor="middle" font-size="12" font-style="italic" fill="#1f2937">trained on demonstrations</text>
+
+  <!-- Arrow 2 -->
+  <line x1="390" y1="200" x2="426" y2="200" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Box 3: RLHF / Constitutional AI / DPO -->
+  <rect x="430" y="160" width="200" height="80" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="530" y="190" text-anchor="middle" font-size="14" fill="#1f2937">RLHF / Constitutional</text>
+  <text x="530" y="208" text-anchor="middle" font-size="14" fill="#1f2937">AI / DPO</text>
+  <text x="530" y="260" text-anchor="middle" font-size="12" font-style="italic" fill="#1f2937">trained on preference comparisons</text>
+
+  <!-- Arrow 3 -->
+  <line x1="630" y1="200" x2="666" y2="200" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Box 4: Assistant model -->
+  <rect x="670" y="160" width="115" height="80" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="727" y="205" text-anchor="middle" font-size="14" fill="#1f2937">Assistant</text>
+  <text x="727" y="223" text-anchor="middle" font-size="14" fill="#1f2937">model</text>
+  <text x="727" y="260" text-anchor="middle" font-size="12" font-style="italic" fill="#1f2937">
+    <tspan x="727" dy="0">follows instructions,</tspan>
+    <tspan x="727" dy="15">refuses/complies consistently</tspan>
+  </text>
+</svg>

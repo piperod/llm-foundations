@@ -4,6 +4,10 @@
 **Previously.** Chunk 03 covered pretraining and scaling laws: how a base model learns to predict text from massive raw corpora.
 **Today.** How that base model gets adapted — through demonstration data, human/AI feedback, and preference optimization — into something like ChatGPT or Claude.
 
+![Pipeline from pretrained base model through supervised fine-tuning and RLHF/Constitutional AI/DPO to an assistant model.](figures/04-base-to-assistant-pipeline.svg)
+
+*Figure 1: Each post-training stage changes what the model optimizes for — from "continue this text plausibly" to "follow this instruction the way a helpful, consistent assistant would."*
+
 ---
 
 ## Beginner

@@ -4,6 +4,10 @@
 **Previously.** Chunk 02 covered the transformer and self-attention — the architecture that processes a sequence of tokens.
 **Today.** How that architecture gets trained at internet scale, and what "scaling laws" say about the relationship between model size, data size, compute, and resulting capability.
 
+![Schematic log-log chart showing training loss decreasing smoothly as compute increases, illustrating the shape of a scaling law.](figures/03-scaling-law-schematic.svg)
+
+*Figure 1: Schematic illustration of a scaling-law curve — loss falls predictably as compute grows, flattening but not hitting a hard floor. Not real measured data; see the references below for actual curves.*
+
 ---
 
 ## Beginner

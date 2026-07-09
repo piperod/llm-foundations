@@ -4,6 +4,10 @@
 **Previously.** Nothing. This is the start of the curriculum; there is no prior chunk to bridge from.
 **Today.** What "next-token prediction" means, why it's the entire training objective behind every LLM you've used, and why calling that objective "just autocomplete" is simultaneously accurate and deeply misleading.
 
+![The next-token loop: context feeds a model, which outputs a probability distribution over candidate next tokens; the sampled token is appended and the process repeats.](figures/00-next-token-loop.svg)
+
+*Figure 1: Generating one token conditions on everything before it; the chosen token is appended to the context and the loop repeats.*
+
 ---
 
 ## Beginner

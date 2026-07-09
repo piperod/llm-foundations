@@ -4,6 +4,10 @@
 **Previously.** Chunk 08 covered hallucination, calibration, and why a model's stated confidence often doesn't track its actual correctness.
 **Today.** One major practical mitigation for that problem: retrieval-augmented generation (RAG) and tool use, including ReAct-style reasoning+acting and how tool-calling behavior gets trained or elicited.
 
+![A query goes to a retriever that searches documents or tools, returns results to a generator LLM, which produces an answer — and may loop back to retrieve/call again.](figures/09-rag-tool-loop.svg)
+
+*Figure 1: Retrieval and tool use both insert an external lookup/action step between the query and the model's final answer, and the loop can repeat (ReAct-style) rather than running just once.*
+
 ---
 
 ## Beginner
