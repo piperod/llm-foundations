@@ -32,3 +32,9 @@ exclude:
   - vendor/
   - node_modules/
   - README.md
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: "default"
