@@ -6,9 +6,9 @@ nav_order: 11
 
 # Chunk 10: Agents — Putting It Together
 
-**Purpose.** Synthesize the entire curriculum into a single picture: an "agent" is not a new kind of model, it's an LLM wrapped in a loop, repeatedly deciding what to do next — and every mechanism from chunks 00-09 shapes how that loop succeeds or fails.
-**Previously.** Chunk 09 covered retrieval-augmented generation and tool use — giving a model the ability to look things up or take actions outside its own weights.
-**Today.** We cover the agent loop itself (plan, act, observe, repeat), planning/decomposition strategies, memory across steps, self-correction, how to evaluate agents, and the specific failure modes — error compounding, context rot, and drift — that only appear once you chain many LLM calls together. This is the capstone chunk: it doesn't introduce new mechanisms so much as show how the mechanisms from every prior chunk interact and amplify each other over many steps.
+**Purpose.** Synthesize the curriculum: an agent is not a new kind of model but a frozen LLM invoked repeatedly inside a loop, and every mechanism from chunks 00–09 reappears inside that loop, now compounding over many steps instead of acting once.
+**Previously.** Chunk 09 covered retrieval-augmented generation and tool use — mechanisms for reading information and taking actions outside the model's weights.
+**Today.** The agent loop (act, observe, update context, repeat), planning and memory architectures, self-correction without weight updates, evaluation of multi-step trajectories, and the three failure modes — error compounding, context rot, and goal drift — that appear only when many LLM calls are chained. This is the capstone chunk: it introduces few new mechanisms and instead shows how the prior ones interact.
 
 ![Anthropic's "Autonomous agent" diagram: an LLM calls tools in a loop based on environmental feedback, with a human able to provide input, continuing until the task is complete.](https://www-cdn.anthropic.com/images/4zrzovbb/website/58d9f10c985c4eb5d53798dea315f7bb5ab6249e-2401x1000.png)
 
@@ -18,93 +18,106 @@ nav_order: 11
 
 ## Beginner
 
-Everything so far in this curriculum has been about a single exchange: you say something, the model says something back. An **agent** is what you get when you stop stopping after one exchange — instead, the model keeps going in a loop: look at the current situation, decide on one small step, actually do that step (like running a search, editing a file, or calling some tool), look at what happened, and decide on the next step. It repeats this over and over until the task is done or it gives up.
+Every prior chunk treated a single exchange: an input goes in, a response comes out, and the interaction ends. An **agent** is a language model used repeatedly. The system examines the current state of a task, selects one small action — running a search, editing a file, executing a command — performs it, observes the result, and selects the next action from the updated state, continuing until the task is complete or abandoned. The loop is the new element; the model inside it is the same next-token predictor introduced in chunk 00. The arrangement resembles a new employee working through an unfamiliar project one task at a time, checking each result before choosing the next.
 
-A useful analogy: think of a new employee working through a to-do list on a project they've never done before. They don't get the whole plan handed to them perfectly in advance. They look at where things stand, do one task, check whether it actually worked, update their notes, and figure out the next task from there. Most of the time this works fine. But a few things can go wrong that don't show up if you just watch them do one task in isolation.
+Three failure modes distinguish this arrangement from single-exchange use, and none of them is visible when watching any one step in isolation. First, **errors compound**: a mistaken conclusion recorded at an early step is treated as established fact by every later step, so downstream mistakes appear as natural continuations of a plan that was already quietly broken. Second, **the working record degrades**: the transcript of actions and observations grows with every step, and the model's ability to identify which parts still matter declines as relevant information is buried under accumulated intermediate results. Third, **the goal drifts**: over many steps, the working objective can shift away from the original request without any single step constituting a visible wrong turn.
 
-First, **small mistakes compound**. If the employee misreads a memo in step 2, and step 5 depends on step 2 being right, the step 5 mistake doesn't look like a fresh error — it looks like a natural continuation of a plan that was already quietly broken. Second, **notes get messy over a long project**. As their to-do list and notebook fill up with everything that's happened so far, it gets harder for them to tell which older notes still matter and which are now irrelevant clutter — they start losing track of the original goal underneath the pile of intermediate steps. Third, **they can drift**. Twenty steps in, the task they're doing might have subtly wandered away from what was actually asked, without any single step feeling like a wrong turn.
-
-An LLM-based agent has all three of these tendencies, for reasons that trace directly back to how these models work: it generates one token at a time with no built-in "undo," it can only "remember" what fits in its context window, and its confidence in its own output doesn't reliably track whether that output is actually correct. None of this makes agents useless — it just means using one well requires understanding these mechanisms, not just trusting the loop to sort itself out.
+Each tendency traces to mechanisms established earlier in the curriculum. Generation proceeds one token at a time with no ability to revise earlier commitments; memory is limited to a finite context window; and the model's confidence in its own output is not a reliable indicator of correctness. Agents remain highly useful despite all three tendencies. Using them well requires managing these mechanisms deliberately rather than trusting the loop to correct itself.
 
 ## Practitioner
 
-The core reason agents fail differently than single-turn chat is that **a single-turn error is a one-time cost, but a multi-step error is a compounding one.** In a normal chat, if the model hallucinates or misreads your intent, you see it immediately and correct it. In an agent loop, that same error gets written into the context, treated as "established fact" by every subsequent step, and can silently steer twenty more steps in the wrong direction before anyone notices — because each individual step, viewed on its own, looks locally reasonable.
+The operational difference between chat and agents is that a single-turn error is a one-time cost while a multi-step error is a compounding one. In chat, a hallucination or misreading surfaces immediately and the user corrects it in the next turn. In an agent loop, the same error is written into the context, conditioned on by every subsequent step, and can steer the trajectory for twenty more steps before anyone notices — because each individual step, viewed alone, is a locally reasonable continuation of what precedes it.
 
-Three failure modes matter in practice:
+The three failure modes, operationally:
 
-- **Error compounding.** A wrong assumption made at step 3 doesn't disappear; it becomes part of the context every later step conditions on. If step 3 says "the config file is at `src/config.json`" and that's wrong, every later step that tries to read or write that path inherits the error, and the agent may even fabricate plausible-looking justifications for why the (wrong) path makes sense — this is hallucination (chunk 08) interacting with the loop structure.
-- **Context rot.** As the transcript grows — every tool call, every file read, every intermediate result gets appended to context — signal gets diluted by accumulated noise. Chroma's 2025 research on this ("Context Rot: How Increasing Input Tokens Impacts LLM Performance") tested 18 frontier models and found performance is *not* flat across the context window: it degrades unevenly as input grows, even well within the advertised context limit, and degrades faster when the relevant information competes with lots of irrelevant accumulated text. This is chunk 06's "lost in the middle" problem, but it gets worse specifically because agent loops are what generates the giant, noisy context in the first place.
-- **Drift / losing the plot.** Over a long session, the working goal can slowly shift away from the original ask as the agent responds to whatever the last few tool outputs said, rather than re-grounding in the original instruction. Nothing "breaks" at any single step; the sum of many small directional nudges adds up.
+- **Error compounding.** A wrong assumption at step 3 does not disappear; it becomes conditioning context for every later step. If step 3 records "the config file is at `src/config.json`" and the path is wrong, every subsequent read or write inherits the error, and the model may generate plausible-sounding justifications for the wrong path — hallucination (chunk 08) interacting with the loop structure.
+- **Context rot.** Every tool call, file read, and intermediate result is appended to the context, and signal is progressively diluted by accumulated noise. Chroma's 2025 report ("Context Rot: How Increasing Input Tokens Impacts LLM Performance") tested 18 frontier models and found that performance is not flat across the context window: it degrades unevenly as input grows, well within advertised context limits, and degrades faster when relevant information competes with large volumes of irrelevant text. This is related to the lost-in-the-middle effect from chunk 06, with the aggravating factor that agent loops are precisely what generates long, noisy contexts.
+- **Goal drift.** Over a long session, the working objective shifts as the agent responds to the most recent tool outputs rather than re-grounding in the original instruction. No individual step breaks; the sum of many small directional nudges does.
 
-A concrete (composite, illustrative) trace of how this typically unfolds:
+A composite, illustrative trace of a typical compounding failure:
 
 ```
-Step 1:  Task: "Fix the failing test in payment_test.py"
-Step 4:  Agent reads payment_test.py, misidentifies the failure as a
-         timezone bug (it's actually a rounding bug)
-Step 7:  Agent edits timezone handling code — test still fails
-Step 9:  Agent, now with a long context full of timezone-related edits,
-         "reasons" that the timezone fix must be incomplete and
-         broadens the edit to unrelated date-handling code
-Step 14: Original test still fails; two unrelated files have now
-         been modified based on a wrong premise from step 4
+Step 1:  Task: "Fix the failing test in payment_test.py."
+Step 4:  Agent misdiagnoses the failure as a timezone bug (it is a rounding bug).
+Step 7:  Agent edits timezone-handling code; the test still fails.
+Step 9:  Conditioned on a context now full of timezone edits, the agent concludes
+         the fix is incomplete and broadens the change to unrelated date-handling code.
+Step 14: The test still fails; two unrelated files have been modified on the basis
+         of the wrong premise recorded at step 4.
 ```
 
-No single step "hallucinated" wildly — each was a locally sensible continuation of what came before. The failure lives in the accumulation, not in any one step.
+No step is individually implausible. The failure resides in the accumulation, which is why per-step review of such a trace often finds nothing to object to.
 
-Practical safeguards that actually help: **checkpoints** (stop and have a human or a separate check confirm progress before continuing, rather than running 20 steps unsupervised); **explicit re-grounding** (periodically re-state the original goal into context rather than trusting it survived 15 steps of accumulated tool output); **narrow, verifiable steps** (prefer steps with checkable outcomes — tests passing, diffs reviewable — over steps that only "sound" right); **context pruning** (actively drop or summarize stale tool output instead of letting the transcript grow unbounded); and **fresh sub-contexts for sub-tasks** (spin up a clean context for a bounded piece of work instead of doing everything in one ever-growing session — see subagents, below).
+Five safeguards have consistent practical value. **Checkpoints**: pause for human or automated confirmation of progress rather than running twenty steps unsupervised. **Explicit re-grounding**: periodically restate the original goal into context rather than assuming it survived fifteen steps of tool output. **Narrow, verifiable steps**: prefer steps whose outcomes are checkable — a test passing, a diff reviewable — over steps that are merely plausible. **Context pruning**: drop or summarize stale tool output instead of letting the transcript grow without bound. **Fresh sub-contexts**: run a bounded sub-task in a clean context rather than in one ever-growing session (the subagent pattern, discussed below).
 
 ## Expert
 
-Formally, an LLM agent is a policy `π(a_t | c_t)` where `c_t` is the accumulated context at step `t` (system prompt, task, prior actions, prior observations) and `a_t` is the next action — which may be a tool call, a piece of reasoning, or a final answer. After acting, the environment (a tool, a file system, a user) returns an observation `o_t`, and `c_{t+1} = c_t ⊕ a_t ⊕ o_t`. This is exactly the ReAct loop (Yao et al., 2022, covered in chunk 09): reasoning traces and actions are interleaved, each conditioning the next. The entire loop inherits, and repeatedly re-applies, every mechanism from earlier chunks: autoregressive generation (chunk 00) with no ability to revise earlier tokens once emitted; a context window that is finite and where attention degrades unevenly across position and length (chunks 02, 06); decoding that is stochastic unless deliberately constrained (chunk 07); and a base rate of hallucination/miscalibration that does not go to zero just because the model is "reasoning" (chunk 08).
+Formally, an agent is a policy
 
-**Planning and decomposition.** Rather than emitting one flat action sequence, more capable agent architectures separate planning from execution — maintaining an explicit plan, procedural memory, and working memory as distinct structures rather than one undifferentiated context blob. Sumers et al.'s "Cognitive Architectures for Language Agents" (arXiv:2309.02427, 2023) frames this using a cognitive-science vocabulary (working memory, episodic memory, semantic memory, procedural memory) borrowed explicitly to give agent designers a shared decomposition vocabulary rather than treating "context" as an undifferentiated scratchpad.
+$$\pi(a_t \mid c_t)$$
 
-**Memory across steps.** Park et al.'s "Generative Agents: Interactive Simulacra of Human Behavior" (arXiv:2304.03442, 2023) is the reference architecture for agent memory beyond a single context window: agents maintain a memory stream of timestamped natural-language observations, periodically synthesize higher-level "reflections" from clusters of related memories, and retrieve relevant memories at decision time using a score combining recency, importance, and relevance. This is effectively RAG (chunk 09) applied to an agent's own history rather than to external documents — it exists because context windows are finite and cannot simply hold everything an agent has ever done.
+where $$c_t$$ is the accumulated context at step $$t$$ — system prompt, task statement, prior actions, prior observations — and $$a_t$$ is the next action: a tool call, a reasoning step, or a final answer. After the action executes, the environment (a tool, a file system, a user) returns an observation $$o_t$$, and the context updates by concatenation:
 
-**Self-correction.** Shinn et al.'s "Reflexion: Language Agents with Verbal Reinforcement Learning" (arXiv:2303.11366, NeurIPS 2023) proposes reinforcing agents without any gradient update: after a failed attempt, the agent generates a natural-language self-reflection on what went wrong, which is stored in an episodic buffer and included in context on the next attempt. This is notable precisely because it's "reinforcement learning" implemented entirely in-context (chunk 05) — the weights never change, only what's in the prompt.
+$$c_{t+1} = c_t \oplus a_t \oplus o_t$$
 
-**Evaluation.** Evaluating agents is harder than evaluating single-turn output because success is a property of an entire trajectory, not a single response: did the agent reach a correct end state, how many steps did it take, did it recover from its own errors, and how much did it cost in tokens/latency along the way. Xi et al.'s survey, "The Rise and Potential of Large Language Model Based Agents" (arXiv:2309.07864, also published as Xi et al., *Science China Information Sciences* 68(2), 2025), surveys this landscape broadly — construction (planning, memory, tool use), applications, and evaluation — and is a reasonable single entry point into the wider agent literature rather than a definitive answer.
+Two properties of this formalization carry most of the weight. The policy is a **frozen** pretrained LLM: no parameter changes during the episode. Consequently, **all state lives in $$c_t$$**: everything the agent "knows" about the task — plan, progress, mistakes — exists as tokens in the context and nowhere else. Interleaving reasoning traces with actions in this loop is the ReAct pattern (Yao et al., 2022, covered in chunk 09). The loop therefore re-applies, at every step, each mechanism from earlier chunks: autoregressive generation with no revision of emitted tokens (chunk 00), finite context with position- and length-dependent attention degradation (chunks 02, 06), stochastic decoding unless deliberately constrained (chunk 07), and a hallucination and miscalibration base rate that does not vanish because the model is "reasoning" (chunk 08).
 
-Two open questions worth sitting with: (1) How should we evaluate agent reliability at scale, given that a single trajectory's success rate doesn't cleanly compose — an agent that succeeds 95% of the time per step has roughly a 36% chance of a fully clean 20-step trajectory if step errors were independent, and error correlation across steps makes this even harder to estimate. (2) Is there a theoretical ceiling on long-horizon coherence given a fixed context window and strictly autoregressive, left-to-right generation with no mechanism to revise earlier commitments — or is this purely an engineering problem solvable with better memory architectures, and not a fundamental limit at all? Neither question has a settled answer as of this writing.
+**Reliability compounds multiplicatively.** Under the idealizing assumption that each step succeeds independently with probability $$p$$, an $$n$$-step trajectory succeeds with probability
+
+$$P(\text{trajectory}) = p^{\,n}, \qquad \text{e.g. } 0.95^{20} \approx 0.358.$$
+
+A per-step reliability that would be considered excellent in single-turn evaluation yields roughly one clean 20-step trajectory in three. The independence assumption, moreover, fails in the unfavorable direction: an erroneous action or observation is appended to $$c_t$$ and conditions every subsequent step, so step failures are positively correlated — one error lowers the success probability of everything downstream, and the context-rot findings above describe the same degradation at the level of context quality rather than discrete errors. Two consequences for evaluation follow. Per-step accuracy is not a sufficient statistic for trajectory success, so agent benchmarks must score end states of full trajectories — correctness, step count, error recovery, token and latency cost — rather than sampled steps. And because a single trajectory is one draw from a high-variance distribution, credible reliability estimates require many rollouts per task, which is expensive and remains methodologically unsettled. Xi et al.'s survey covers the evaluation landscape alongside agent construction and applications, and is a reasonable single entry point to the wider literature.
+
+**Planning and memory architectures.** Sumers et al. (2023) organize agent design using a cognitive-science vocabulary — working memory, episodic memory, semantic memory, procedural memory — as an alternative to treating the context as an undifferentiated scratchpad; the taxonomy's value is that it names which structure a given engineering intervention modifies. Park et al. (2023) provide the reference architecture for memory beyond a single context window: agents maintain a *memory stream* of timestamped natural-language observations, periodically synthesize higher-level *reflections* from clusters of related memories, and retrieve memories at decision time using a score combining recency, importance, and relevance. This is retrieval-augmented generation (chunk 09) applied to the agent's own history rather than to external documents, and it exists because $$c_t$$ is finite and cannot hold everything an agent has done.
+
+**Self-correction without weight updates.** Shinn et al.'s Reflexion (2023) implements reinforcement entirely in context: after a failed attempt, the agent generates a natural-language self-reflection on the failure, stores it in an episodic buffer, and includes it in the context of the next attempt. In the terms of the formalization above, this is exact: the policy $$\pi$$ is immutable, so the only channel through which experience can improve behavior is $$c_t$$ — in-context learning (chunk 05) doing the work that gradient updates do in classical reinforcement learning.
+
+Two questions remain open. First, how trajectory reliability should be evaluated at scale: multiplicative composition plus correlated errors means that headline per-step metrics systematically overstate multi-step reliability, and no standard methodology yet corrects for this. Second, whether long-horizon coherence is fundamentally limited by a fixed context window combined with strictly left-to-right generation and no mechanism for revising earlier commitments, or whether it is an engineering problem addressable with better memory architectures. Neither question has a settled answer as of this writing.
 
 ---
 
 ## Implications for agentic-dev
 
-Every mechanism covered in this curriculum shows up as a concrete, load-bearing practice in agentic-dev — this chunk is the explicit bridge between "why LLMs behave this way" and "what agentic-dev actually tells you to do about it."
+Each mechanism in this curriculum corresponds to a specific agentic-dev practice; this mapping is the point of the capstone.
 
-- **Tokenization and cost (chunk 01)** is why agentic-dev cares about `/model` choice and prompt length at all — every step of an agent loop re-sends accumulated context, so token cost compounds across a session exactly the way errors do.
-- **Attention and context limits (chunk 02, 06)** is the mechanical reason CLAUDE.md exists and why it stays short and high-signal: it's context that gets re-attended every single step of every loop, so its cost (and its ability to get "lost in the middle" per Chroma's context rot findings) is paid repeatedly, not once.
-- **Alignment/RLHF behavior (chunk 04)** is why an agent left unsupervised will confidently proceed rather than pause to ask — this is exactly why agentic-dev's plan mode and human checkpoints exist: to insert a verification step before the loop is trusted to keep going.
-- **In-context learning and prompting structure (chunk 05)** is the direct mechanism behind agentic-dev's Chunk 02 (Prompting) — good agent instructions work because of in-context learning, not despite it.
-- **Context window management (chunk 06)** is why agentic-dev leans on subagents: spinning up a fresh, narrow context for a bounded sub-task is a direct, practical countermeasure to context rot and drift, matching the "fresh sub-contexts for sub-tasks" safeguard above.
-- **Decoding non-determinism (chunk 07)** is why agentic-dev treats identical prompts as capable of producing different agent trajectories run to run, and why gates/CI matter more than "it worked once."
-- **Hallucination and calibration (chunk 08)** is why agentic-dev pushes verification passes and review steps rather than trusting an agent's own stated confidence — an agent's belief that a step succeeded is not evidence that it did.
-- **Tool use (chunk 09)** is the mechanical substrate of the entire agent loop — every "action" in the loop described above is a tool call, and agentic-dev's hooks are literally checkpoints wired into that action/observation boundary.
-
-Everything from here forward in agentic-dev — CLAUDE.md, prompting structure, plan mode, review passes, hooks, subagents, gates/CI — is about managing these exact mechanisms in practice, given everything this curriculum just covered about why LLMs behave the way they do.
+- **Tokenization and cost (chunk 01):** every loop step re-sends the accumulated context, so token cost compounds per session — the reason model choice and prompt length are managed deliberately rather than ignored.
+- **Attention and context limits (chunks 02, 06):** `CLAUDE.md` is re-attended at every step of every loop, which is why it is kept short and high-signal.
+- **Alignment-shaped behavior (chunk 04):** an unsupervised agent proceeds confidently rather than pausing to ask, which is why plan mode and human checkpoints insert verification before the loop is trusted to continue.
+- **In-context learning (chunk 05):** agent instructions steer behavior through the same conditioning mechanism as any prompt, which is what makes instruction files effective at all.
+- **Context window management (chunk 06):** subagents give a bounded sub-task a fresh, narrow context — a direct countermeasure to context rot and drift.
+- **Decoding non-determinism (chunk 07):** identical prompts can produce different trajectories run to run, which is why gates and CI carry more evidential weight than a single successful run.
+- **Hallucination and calibration (chunk 08):** an agent's stated confidence that a step succeeded is not evidence that it did, which is why verification passes and review steps are structural rather than optional.
+- **Tool use (chunk 09):** every action in the loop is a tool call, and hooks are checkpoints wired into the action–observation boundary.
 
 ---
 
+## Exercises
+
+1. **(Beginner)** Trace the agent loop by hand for the task "find and fix a broken link on a website": write five action–observation steps. Then mark one step where a wrong conclusion would propagate to later steps, one point where accumulated output could bury the original goal, and one step where the objective could drift without any visible error.
+2. **(Practitioner)** Rewrite the vague agent task "clean up the authentication code" as a sequence of four narrow steps, each with an objectively checkable completion criterion (a passing test, a reviewable diff, a lint report). For each rewritten step, state which ambiguity in the original phrasing it eliminates.
+3. **(Expert)** Compute the trajectory success probability $$p^n$$ for $$(p, n) \in \{(0.99, 10), (0.95, 10), (0.95, 20), (0.90, 20)\}$$. Then, for the $$p = 0.95$$, $$n = 20$$ case, suppose a single checkpoint placed after step $$k$$ detects any accumulated error and allows retrying only the failed segment: determine which $$k$$ most improves the expected outcome, and explain how positively correlated step failures (rather than independent ones) change the value of the checkpoint.
+
 ## Checklist
 
-- I can describe an agent as a loop of context-conditioned action, observation, and updated context — not a fundamentally different kind of model.
-- I can explain why errors compound in agent loops in a way they don't in single-turn chat.
-- I can explain context rot and why it's distinct from (but related to) the "lost in the middle" effect from chunk 06.
-- I can name at least three practical safeguards against drift (checkpoints, re-grounding, narrow verifiable steps, context pruning, fresh sub-contexts).
-- I can connect at least three prior chunks (tokenization, context windows, alignment, decoding, hallucination, tool use) to a specific agentic-dev practice.
-- I understand why evaluating an agent's trajectory is harder than evaluating a single response.
+After this chunk you should be able to:
+
+- [ ] Describe an agent as a frozen LLM policy $$\pi(a_t \mid c_t)$$ in a loop of action, observation, and context concatenation, with all state in the context.
+- [ ] Explain why errors compound across an agent trajectory but surface immediately in single-turn chat.
+- [ ] Distinguish context rot from the lost-in-the-middle effect and state why agent loops aggravate it.
+- [ ] Compute trajectory success probability from per-step reliability under independence, and explain why independence fails in the unfavorable direction.
+- [ ] Name the five safeguards — checkpoints, re-grounding, narrow verifiable steps, context pruning, fresh sub-contexts — and match each to the failure mode it addresses.
+- [ ] Describe the memory-stream architecture (Park et al.), Reflexion (Shinn et al.), and locate each within the Sumers et al. memory taxonomy.
+- [ ] Map each prior chunk's mechanism to a specific agentic-dev practice.
 
 ## References
 
-1. "Generative Agents: Interactive Simulacra of Human Behavior" (Joon Sung Park, Joseph C. O'Brien, Carrie J. Cai, Meredith Ringel Morris, Percy Liang, Michael S. Bernstein; UIST 2023) — https://arxiv.org/abs/2304.03442
-2. "Reflexion: Language Agents with Verbal Reinforcement Learning" (Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, Shunyu Yao; NeurIPS 2023) — https://arxiv.org/abs/2303.11366
-3. "Building Effective AI Agents" (Erik Schluntz and Barry Zhang, Anthropic — engineering blog post, not peer-reviewed, December 19, 2024) — https://www.anthropic.com/research/building-effective-agents
-4. "Cognitive Architectures for Language Agents" (Theodore R. Sumers, Shunyu Yao, Karthik Narasimhan, Thomas L. Griffiths; 2023) — https://arxiv.org/abs/2309.02427
-5. "The Rise and Potential of Large Language Model Based Agents: A Survey" (Zhiheng Xi et al.; arXiv 2023, also *Science China Information Sciences* 68(2), 2025) — https://arxiv.org/abs/2309.07864
-6. "Context Rot: How Increasing Input Tokens Impacts LLM Performance" (Kelly Hong, Anton Troynikov, Jeff Huber, Chroma — technical research report, not peer-reviewed, July 2025) — https://www.trychroma.com/research/context-rot
+1. Park, J. S., O'Brien, J. C., Cai, C. J., Morris, M. R., Liang, P., & Bernstein, M. S. "Generative Agents: Interactive Simulacra of Human Behavior." *UIST* (2023). arXiv:2304.03442. https://arxiv.org/abs/2304.03442
+2. Shinn, N., Cassano, F., Gopinath, A., Narasimhan, K., & Yao, S. "Reflexion: Language Agents with Verbal Reinforcement Learning." *NeurIPS* (2023). arXiv:2303.11366. https://arxiv.org/abs/2303.11366
+3. Schluntz, E., & Zhang, B. "Building Effective AI Agents." Anthropic engineering blog post, not peer-reviewed (2024). https://www.anthropic.com/research/building-effective-agents
+4. Sumers, T. R., Yao, S., Narasimhan, K., & Griffiths, T. L. "Cognitive Architectures for Language Agents." arXiv preprint (2023). arXiv:2309.02427. https://arxiv.org/abs/2309.02427
+5. Xi, Z., et al. "The Rise and Potential of Large Language Model Based Agents: A Survey." *Science China Information Sciences* 68(2) (2025); arXiv:2309.07864 (2023). https://arxiv.org/abs/2309.07864
+6. Hong, K., Troynikov, A., & Huber, J. "Context Rot: How Increasing Input Tokens Impacts LLM Performance." Chroma technical research report, not peer-reviewed (2025). https://www.trychroma.com/research/context-rot
 
 ## Chunk summary
 
-An agent is an LLM in a loop — plan, act, observe, repeat — and every mechanism this curriculum covered (tokenization and cost, attention and context limits, alignment-shaped behavior, in-context learning, context window management, stochastic decoding, hallucination, tool use) reappears inside that loop, now compounding over many steps instead of showing up once. That compounding is precisely why agents fail differently than single-turn chat: errors accumulate, context rots, and long sessions can drift from the original goal without any single step looking wrong. This closes the 11-chunk "LLM Foundations" curriculum (chunks 00 through 10) — from next-token prediction up through agentic loops — and the intent throughout has been to make the mechanisms visible before you ever touch agentic-dev's own material. Everything that follows in agentic-dev (CLAUDE.md, prompting structure, plan mode, review passes, hooks, subagents, gates/CI) is the practitioner's toolkit for managing exactly these mechanisms in real agentic workflows — start there next.
+An agent is a frozen LLM applied as a policy $$\pi(a_t \mid c_t)$$ inside a loop whose only mutable state is the context, updated by concatenation at every step. Because the loop re-applies every mechanism this curriculum has covered — autoregressive generation, finite attention over a growing context, stochastic decoding, nonzero hallucination rates — reliability composes multiplicatively ($$p^n$$ under independence, worse under the correlated errors that real loops produce), and agents fail through accumulation: compounding errors, context rot, and goal drift rather than any single visibly wrong step. This chunk closes the 11-chunk LLM Foundations curriculum, which has run from next-token prediction (chunk 00) through the agentic loop; the intent throughout has been to make the mechanisms visible before introducing tooling built on them. The agentic-dev material that follows — `CLAUDE.md`, prompting structure, plan mode, review passes, hooks, subagents, gates and CI — is the practitioner's toolkit for managing exactly these mechanisms, and is the appropriate next step.

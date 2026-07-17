@@ -6,9 +6,9 @@ nav_order: 3
 
 # Chunk 02: The Transformer & Attention
 
-**Purpose.** Understand the mechanism — self-attention — that lets a model weigh every token against every other token, and why this replaced recurrent processing as the default architecture for language models.
-**Previously.** Chunk 01 turned text into tokens and then into vectors (embeddings) that encode meaning as position in a high-dimensional space.
-**Today.** How a sequence of those vectors actually gets processed: the attention mechanism, multi-head attention, positional encoding, and the transformer block that stacks them.
+**Purpose.** Establish self-attention — a learned, content-dependent weighting of every token against every other token — as the core computation of the Transformer, and derive the cost structure that follows from its pairwise formulation.
+**Previously.** Chunk 01 converted text into tokens and tokens into embedding vectors that encode meaning as position in a high-dimensional space.
+**Today.** Scaled dot-product attention, multi-head attention, causal masking, positional encoding, and the quadratic cost in sequence length that shapes how context is limited and priced.
 
 ![The Transformer's encoding component (a stack of encoders) and decoding component (a stack of decoders), each built from self-attention and feed-forward sub-layers.](https://jalammar.github.io/images/t/The_transformer_encoder_decoder_stack.png)
 
@@ -18,94 +18,103 @@ nav_order: 3
 
 ## Beginner
 
-Imagine reading the sentence: "The trophy didn't fit in the suitcase because **it** was too big." To know what "it" refers to, you don't read the sentence strictly left to right and forget everything — you glance back at "trophy" and "suitcase" and decide which one makes sense as "too big." That glancing-back-and-weighing is, loosely, what **attention** does inside a language model.
+Consider the sentence "The trophy didn't fit in the suitcase because it was too big." Resolving what "it" refers to requires relating that word to "trophy" and "suitcase" — words that appeared earlier and are not adjacent to it. Attention is the mechanism by which a model performs this relating: for each token, the model computes a relevance score against every other token in the context, converts those scores into weights, and builds an updated representation of the token as a weighted combination of the others. In the example, a well-trained model assigns high weight from "it" to "trophy" and "suitcase" and low weight to function words such as "because." The process resembles a reader glancing back at earlier phrases to decide what a pronoun means, except that it happens for every token at once.
 
-Before transformers, models processed text one word at a time, in order, carrying forward a summary as they went — like reading a book while only being allowed to remember a shrinking mental note of everything so far. The further back the important detail was, the easier it was to lose. This step-by-step approach is called **recurrence**, and it's slow (each word has to wait for the previous one to finish) and forgetful over long stretches.
+The architectures that preceded the Transformer processed text recurrently: one token at a time, in order, carrying forward a fixed-size summary of everything read so far. Recurrence has two structural weaknesses. Information from distant tokens degrades as it is repeatedly compressed into the running summary, and the strict left-to-right dependency prevents parallel computation — each step must wait for the previous one. Attention removes both constraints. Every token has direct access to every other token rather than access mediated by a summary, and the computation for all positions proceeds simultaneously, which suits hardware designed for large parallel operations.
 
-Attention changes the approach entirely: every word gets to directly look at every other word in the sentence at the same time, and the model learns how much each word should "attend to" each other word. In our example, the model learns that "it" should attend strongly to "trophy" and "suitcase" and weakly to "didn't" or "because." Crucially, this happens for all words simultaneously, not one at a time — which is also why transformers can be trained faster on modern hardware (GPUs are good at doing many things at once, not so good at doing one thing 10,000 times in a row).
+The Transformer, introduced by Vaswani et al. (2017) under the title "Attention Is All You Need," is the architecture built around this mechanism, and it underlies essentially every major large language model in production today, including Claude. One complication follows immediately from the design: because attention compares all tokens simultaneously, it carries no inherent notion of order — "dog bites man" and "man bites dog" contain the same pairwise relationships among the same words. Transformers therefore add a positional signal to each token's vector before attention runs. Attention supplies the "what relates to what"; positional encoding supplies the "what precedes what."
 
-The word "transformer" refers to the whole architecture built around this idea, introduced in a 2017 paper memorably titled "Attention Is All You Need." It's the architecture behind essentially every major chatbot today, including Claude.
-
-One more piece: since attention looks at all words at once, it has no built-in sense of order — "dog bites man" and "man bites dog" would look identical without extra help. So the model adds a signal called **positional encoding** to each word's vector, tagging it with where it sits in the sequence. Attention gives the model the "what relates to what"; positional encoding gives it the "what comes before what."
-
-The upshot: attention is the reason a model can hold a whole conversation in view and pull the relevant piece from three paragraphs ago, rather than only remembering the last sentence.
+Direct pairwise access is one mechanism behind a model's ability to use material from early in a long context rather than only the most recent text. It is not a guarantee of perfect recall, for reasons developed in the next tier.
 
 ## Practitioner
 
-If you use an LLM through an API or chat interface daily, here's the mental model that actually matters: **every token you send gets compared against every other token in the current context**, on every layer, for every response. That comparison is the attention computation, and it is not free — it's the dominant cost of running the model.
-
-Concretely, if your conversation has `n` tokens, self-attention requires computing relationships between all pairs of tokens, which is proportional to `n × n` (n²). Double the conversation length, and the attention computation roughly quadruples (in the original, "vanilla" formulation — more on nuances in the Expert section). This is why:
-
-- **Cost scales worse than linearly** with conversation length. A 10,000-token conversation isn't 10x the cost of a 1,000-token one — it can be considerably more, because of this quadratic term (though real systems use optimizations that soften this).
-- **Latency creeps up** as a conversation grows, especially for the "time to first token," because the model has to attend over the full accumulated context before producing anything new.
-- **Earlier details can get "diluted"** — not because the model literally deletes them, but because attention is a weighted average over a lot of competing tokens. As the haystack grows, any single needle gets relatively less weight unless the content strongly signals its own relevance.
-
-A worked mental picture — think of attention as a spreadsheet:
+The operational fact is this: every token in the context is compared against every other token in the context, at every layer, whenever the model runs. This comparison is the dominant computation in serving a language model, and its cost grows with the square of the context length in the vanilla formulation. A conversation of $$n$$ tokens induces an $$n \times n$$ grid of pairwise comparisons per layer:
 
 ```
               tok_1   tok_2   tok_3   ...  tok_n
    tok_1      [ w11    w12    w13   ...   w1n ]
    tok_2      [ w21    w22    w23   ...   w2n ]
-   tok_3      [ w31    w32    w33   ...   w3n ]
    ...
    tok_n      [ wn1    wn2    wn3   ...   wnn ]
 ```
 
-Every cell `w_ij` is "how much should token i attend to token j," recomputed at every layer. That grid is n×n — it grows as the square of the sequence length. This is the concrete reason "context window" is a real, load-bearing number (e.g., 200K tokens) rather than an arbitrary marketing figure — it reflects real compute and memory the provider has to allocate per request.
+Growing a conversation from 1,000 to 10,000 tokens increases the pairwise count from $$10^6$$ to $$10^8$$ — a hundredfold increase in attention work for a tenfold increase in length. Deployed systems apply optimizations that reduce the constants substantially, but the superlinear shape of the curve remains.
 
-Practical implications you can act on: when a conversation gets long and responses feel slower or start missing earlier instructions, that's not a bug in your imagination — it's this mechanism. Trimming irrelevant history, summarizing instead of re-pasting full documents, and keeping instructions concise and near the point of use all reduce the effective `n` the model has to attend over, which helps both cost and quality.
+Three consequences are directly observable when using a model through an API or chat interface:
+
+1. **Time to first token grows with accumulated context.** Before producing anything, the model must run attention over the full prompt. Long conversations feel slower to start responding because the prefill computation genuinely is larger.
+2. **Input tokens are priced because they cost compute.** Per-token pricing on context reflects real attention work performed on every request, which is also why the advertised context window is an engineering ceiling rather than an arbitrary product decision.
+3. **Attention over a large context is a competition for weight.** The weights in each row of the grid form a normalized distribution: they sum to one. As the context grows, any given earlier detail competes with more tokens for the same total weight, so relevant material from far back can receive less influence unless its content strongly signals relevance. Long-context models mitigate this; the underlying weighted-average structure does not change.
+
+These consequences convert into concrete practices. When a long session becomes slow or begins missing earlier instructions, the remedies all operate by reducing the effective $$n$$: trim history that no longer bears on the task, summarize large documents instead of re-pasting them in full, and state instructions concisely and near the point where they apply. Each intervention reduces both the quadratic compute term and the number of tokens competing for attention weight.
 
 ## Expert
 
-Formally, self-attention maps a sequence of input vectors to a new sequence by computing, for each position, a weighted sum of "value" vectors, where weights come from a compatibility function between "query" and "key" vectors. Given input embeddings `X`, the model learns projection matrices `W_Q`, `W_K`, `W_V` producing:
+Self-attention maps an input sequence $$X \in \mathbb{R}^{n \times d_{\text{model}}}$$ to a new sequence of the same length. Three learned projection matrices produce queries, keys, and values:
 
-```
-Q = X W_Q,   K = X W_K,   V = X W_V
-Attention(Q, K, V) = softmax( Q K^T / sqrt(d_k) ) V
-```
+$$Q = XW_Q, \qquad K = XW_K, \qquad V = XW_V$$
 
-This is **scaled dot-product attention**: the dot product `Q K^T` measures similarity between every query and every key, the `sqrt(d_k)` scaling prevents the softmax from saturating as dimensionality grows, and the softmax turns similarities into a probability distribution used to weight the value vectors (Vaswani et al., 2017). Notice the `Q K^T` term is an `n × n` matrix for a sequence of length `n` — this is the source of the O(n²) time and memory cost in sequence length that defines the "vanilla" transformer.
+with $$W_Q, W_K \in \mathbb{R}^{d_{\text{model}} \times d_k}$$ and $$W_V \in \mathbb{R}^{d_{\text{model}} \times d_v}$$. Scaled dot-product attention is then
 
-**Multi-head attention** runs several of these attention operations in parallel, each with its own learned `W_Q, W_K, W_V`, then concatenates and projects the results. Each head can specialize — some heads track syntactic relationships, others track coreference (like "it" → "trophy"), others track positional adjacency. This is empirically and mechanistically documented: Anthropic's "A Mathematical Framework for Transformer Circuits" (Elhage et al., 2021) decomposes attention-only transformers into interpretable circuits and identifies specific head types, notably **induction heads**, which look back for earlier occurrences of the current token and copy what followed it — a mechanistic account of a basic in-context-learning behavior.
+$$\mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)V$$
 
-**Positional encoding** is necessary because attention itself is permutation-invariant — without it, shuffling the input tokens would produce the same set of pairwise attention scores. The original paper adds fixed sinusoidal functions of position to each embedding; many later architectures use learned or relative positional schemes instead (e.g., rotary embeddings), but the underlying need is the same: inject order into an otherwise order-blind mechanism.
+The matrix $$QK^\top \in \mathbb{R}^{n \times n}$$ contains the dot-product compatibility of every query with every key; the row-wise softmax converts each row into a probability distribution; and the product with $$V$$ makes each output position a convex combination of value vectors (Vaswani et al., 2017). The $$\sqrt{d_k}$$ divisor exists because the magnitude of dot products grows with dimension: for vectors with components of roughly unit scale, unscaled logits grow with $$d_k$$, pushing the softmax into a saturated regime where it approximates a hard argmax and gradients through the non-selected positions vanish. Dividing by $$\sqrt{d_k}$$ keeps the logits in a range where the softmax remains soft and trainable.
 
-Historically, attention did not originate with the transformer. Bahdanau, Cho, and Bengio (2015) introduced an attention mechanism inside a recurrent encoder-decoder for machine translation, letting the decoder "look back" at relevant source words instead of relying on a single fixed-length vector summary. Vaswani et al.'s 2017 contribution was to discard the recurrence entirely — "attention is all you need" — enabling full parallelization across positions during training and substantially better long-range dependency modeling.
+**Multi-head attention** runs $$h$$ attention operations in parallel, each with its own projections into a lower-dimensional subspace (in the original architecture, $$d_k = d_v = d_{\text{model}}/h$$); the outputs are concatenated and projected back to $$d_{\text{model}}$$ by a learned matrix $$W_O$$. Separate heads can learn distinct relational patterns — syntactic dependency, coreference, positional adjacency — rather than forcing one attention distribution to serve every purpose.
 
-The O(n²) cost has motivated a large body of follow-up work on efficient attention approximations — sparse attention patterns, low-rank projections, and kernel-based linear attention, surveyed in Tay et al., "Efficient Transformers: A Survey" (2022). Two open questions worth sitting with: (1) how much of the quadratic cost is fundamental versus an artifact of the specific formulation — production systems already use optimizations (e.g., flash-attention-style kernels, KV caching, sliding windows) that change the constants and sometimes the asymptotics without changing the underlying quadratic pairwise-comparison problem; (2) how far mechanistic interpretability of attention heads (à la Elhage et al.) generalizes to the largest, multi-layer production models, versus the small attention-only toy models the original circuits framework analyzed.
+**Causal masking.** An autoregressive model must respect the factorization from chunk 00: position $$t$$ may condition only on positions $$< t$$. Decoder-style attention enforces this by setting the logits for all future positions to $$-\infty$$ before the softmax, zeroing their weights. Training can therefore compute the loss at every position of a sequence in one parallel pass, with each position provably blind to its own future.
+
+**Complexity.** Forming $$QK^\top$$ and applying it to $$V$$ costs $$O(n^2 d)$$ time for sequence length $$n$$ and model dimension $$d$$, with $$O(n^2)$$ memory for the attention matrix per head per layer in the vanilla formulation. Production systems change the constants without eliminating the pairwise structure: fused kernels compute attention in tiles without materializing the full $$n \times n$$ matrix, and KV caching stores keys and values from previous steps so that incremental decoding attends from one new query rather than recomputing the full prefix. The asymptotic pairwise-comparison problem persists beneath these optimizations.
+
+**Positional information.** Attention is permutation-equivariant: permuting the input rows permutes the outputs identically, so the mechanism itself cannot distinguish orderings. The original paper injects fixed sinusoidal encodings added to the input embeddings,
+
+$$PE_{(pos,\,2i)} = \sin\!\left(\frac{pos}{10000^{2i/d_{\text{model}}}}\right), \qquad PE_{(pos,\,2i+1)} = \cos\!\left(\frac{pos}{10000^{2i/d_{\text{model}}}}\right)$$
+
+giving each dimension pair a distinct wavelength. Modern models typically use learned or rotary positional embeddings instead; rotary embeddings (RoPE) and their consequences for context-length extension are treated in chunk 06.
+
+Historically, attention predates the Transformer. Bahdanau et al. (2015) introduced it inside a recurrent encoder–decoder for machine translation, allowing the decoder to weight source positions directly instead of relying on a single fixed-length summary vector. The contribution of Vaswani et al. (2017) was to remove the recurrence entirely, gaining full parallelism across positions during training.
+
+Two lines of subsequent work frame the open questions. First, the $$O(n^2 d)$$ cost motivated a large literature on efficient approximations — sparse attention patterns, low-rank projections, kernel-based linear attention — surveyed by Tay et al. (2022); how much of the quadratic cost is fundamental versus an artifact of the exact formulation remains unresolved. Second, Elhage et al. (2021) decompose small attention-only Transformers into interpretable circuits, identifying head types such as induction heads, which locate an earlier occurrence of the current token and copy what followed it — a mechanistic account of one basic in-context-learning behavior. The extent to which this circuit-level analysis scales from toy models to deep production models is an active research question.
 
 ---
 
 ## Implications for agentic-dev
 
-The causal chain, concretely: self-attention's core operation computes an n×n matrix of pairwise token relationships (Vaswani et al., 2017), so both compute and memory grow at least quadratically with the number of tokens in context. That is the deep, architectural reason:
+The quadratic cost of vanilla attention is one mechanical reason context is a limited, metered resource rather than an unbounded log. Several design decisions in agentic tooling follow from this cost structure:
 
-1. **Context windows have hard limits.** A provider can't just offer "infinite context" — every additional token multiplies the attention cost against every existing token, not just adds to it. The stated context window (e.g., 200K tokens) is a real ceiling on how much the attention mechanism can be run over per request, not a marketing choice.
-2. **Longer conversations cost more and get slower.** This is the same n² term from the Practitioner section, now tied to a specific design consequence: Claude Code cannot treat "just keep everything in context" as a free default action.
-3. **This is why Claude Code uses subagents.** Spinning up a subagent to do exploratory research or a large multi-file search, and having it return only a condensed result, keeps the *main* conversation's token count — and therefore its attention cost — from ballooning with every intermediate step the subagent took. The expensive quadratic cost is paid inside the subagent's short-lived, separate context, not accumulated forever in the primary one.
-4. **This is why context compaction exists.** When a session's history gets long, compacting it (summarizing older turns instead of retaining every raw token) directly reduces `n`, which reduces both cost and the attention-dilution problem described in the Practitioner section — the model has fewer, denser tokens to spread its attention weights across instead of many redundant ones.
-5. **This is why CLAUDE.md is a curated file rather than "put everything in context."** Every line placed in CLAUDE.md is paid for on every single turn, for the life of the session, because it sits in the always-present context that attention runs over. A large, unfiltered dump of project documentation would tax the same quadratic mechanism on every request. Keeping CLAUDE.md short and high-signal is a direct response to the cost structure described in the Expert section, not just a style preference.
+- **Subagents isolate expensive intermediate context.** A subagent that performs a large multi-file search and returns only a condensed result pays the attention cost of its intermediate tokens inside a short-lived context, instead of accumulating them in the main conversation where they would be re-attended on every subsequent turn.
+- **Compaction reduces $$n$$ directly.** Summarizing older turns replaces many raw tokens with fewer, denser ones, lowering both the quadratic compute term and the number of tokens competing for attention weight.
+- **`CLAUDE.md` is curated because always-present context is paid for on every turn.** Each line in an always-loaded file participates in attention for the life of the session; a short, high-signal file is a response to the cost model, not merely a style preference.
 
-In short: attention's quadratic cost is not a background implementation detail — it is the reason context management (subagents, compaction, curated always-on files) is a first-class design concern in agentic coding tools rather than an optimization to bolt on later.
+Attention cost is one factor among several in these decisions — chunk 06 treats context windows, long-context behavior, and positional extrapolation in full, and should be read before drawing quantitative conclusions about any specific system.
 
 ---
 
+## Exercises
+
+1. **(Beginner)** For the sentence "The lawyer questioned the witness because she was confused," list the tokens that "she" should attend to most strongly and state what information the attention weights would need to encode to resolve the ambiguity. Then explain, using "dog bites man" versus "man bites dog," why a model with attention but no positional encoding could not distinguish the two sentences.
+2. **(Practitioner)** A conversation grows from $$n$$ tokens to $$2n$$ tokens. State how the attention computation scales in the vanilla formulation, and explain what a user observes in (a) time to first token and (b) input-token cost per request. Then list two interventions that reduce the effective context length and identify, for each, which of the two observable effects it improves.
+3. **(Expert)** Let a two-token sequence have queries $$q_1 = (1, 0)$$, $$q_2 = (0, 1)$$, keys $$k_1 = (1, 0)$$, $$k_2 = (1, 1)$$, and values $$v_1 = (1, 0)$$, $$v_2 = (0, 2)$$, with $$d_k = 2$$. Compute the scaled logits $$q_i \cdot k_j / \sqrt{2}$$, the softmax attention weights for each position, and the two output vectors. Then recompute the output at position 1 under a causal mask and explain why it differs from the unmasked case.
+
 ## Checklist
 
-- [ ] I can explain, without jargon, why a model needs to "look back" at earlier words rather than just reading left to right.
-- [ ] I can state what query, key, and value vectors represent in scaled dot-product attention.
-- [ ] I can explain why attention needs positional encoding (attention alone is order-blind).
-- [ ] I can explain why multi-head attention is used instead of a single attention computation.
-- [ ] I can explain, in my own words, why attention cost grows roughly with the square of sequence length.
-- [ ] I can connect that quadratic cost to a concrete agentic-dev practice (subagents, compaction, or CLAUDE.md curation) and explain the causal link, not just name the terms.
+After this chunk you should be able to:
+
+- [ ] Explain why direct pairwise access between tokens replaced recurrent summary-passing, citing both the information-degradation and parallelism arguments.
+- [ ] State what the query, key, and value projections are and write the scaled dot-product attention equation, including the purpose of the $$\sqrt{d_k}$$ term.
+- [ ] Describe multi-head attention as parallel attention over projected subspaces and give one reason multiple heads are used.
+- [ ] Explain causal masking and its relation to the autoregressive factorization from chunk 00.
+- [ ] State the $$O(n^2 d)$$ time and $$O(n^2)$$ memory cost of vanilla attention, and describe what fused kernels and KV caching change and what they do not.
+- [ ] Explain why attention requires positional information and name the original sinusoidal scheme.
+- [ ] Connect the quadratic cost to a specific context-management practice — subagents, compaction, or `CLAUDE.md` curation — with the causal link stated explicitly.
 
 ## References
 
-1. Attention Is All You Need (Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, Polosukhin — NeurIPS 2017) — https://arxiv.org/abs/1706.03762
-2. Neural Machine Translation by Jointly Learning to Align and Translate (Bahdanau, Cho, Bengio — ICLR 2015) — https://arxiv.org/abs/1409.0473
-3. A Mathematical Framework for Transformer Circuits (Elhage, Nanda, Olsson, Henighan, Joseph, Mann, Askell, et al. — Anthropic, Transformer Circuits Thread, 2021) — https://transformer-circuits.pub/2021/framework/index.html
-4. Efficient Transformers: A Survey (Tay, Dehghani, Bahri, Metzler — ACM Computing Surveys, 2022; arXiv preprint 2020) — https://arxiv.org/abs/2009.06732
+1. Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, Ł., & Polosukhin, I. "Attention Is All You Need." *NeurIPS* (2017). arXiv:1706.03762. https://arxiv.org/abs/1706.03762
+2. Bahdanau, D., Cho, K., & Bengio, Y. "Neural Machine Translation by Jointly Learning to Align and Translate." *ICLR* (2015). arXiv:1409.0473. https://arxiv.org/abs/1409.0473
+3. Elhage, N., Nanda, N., Olsson, C., Henighan, T., Joseph, N., Mann, B., Askell, A., et al. "A Mathematical Framework for Transformer Circuits." *Transformer Circuits Thread*, Anthropic (2021). https://transformer-circuits.pub/2021/framework/index.html
+4. Tay, Y., Dehghani, M., Bahri, D., & Metzler, D. "Efficient Transformers: A Survey." *ACM Computing Surveys* (2022). arXiv:2009.06732. https://arxiv.org/abs/2009.06732
 
 ## Chunk summary
 
-Attention lets every token in a sequence directly weigh every other token, replacing the slow, forgetful step-by-step processing of recurrent models — that's the beginner intuition, the practitioner's explanation for rising cost and latency in long conversations, and, formally, scaled dot-product attention over learned query/key/value projections plus positional encoding to restore order. The same n² pairwise-comparison cost that defines the architecture (Vaswani et al., 2017) is the concrete, non-metaphorical reason Claude Code manages context deliberately — bounded context windows, subagents that isolate expensive intermediate work, context compaction, and a deliberately curated CLAUDE.md — instead of simply expanding context indefinitely.
+Self-attention updates each token's representation as a softmax-weighted combination of value vectors, with weights derived from query–key dot products over learned projections of the input; multi-head attention runs this in parallel subspaces, causal masking preserves the autoregressive factorization, and positional encoding restores the order information that the permutation-equivariant mechanism discards. The formulation costs $$O(n^2 d)$$ time and $$O(n^2)$$ attention-matrix memory in sequence length $$n$$ (Vaswani et al., 2017), and production optimizations change constants without removing the pairwise structure. That cost profile is one mechanical reason context is limited and priced, and therefore one reason agentic tools treat context management — subagents, compaction, curated always-on files — as a first-class design concern. Mechanistic analysis of individual attention heads (Elhage et al., 2021) and efficient approximations to the quadratic computation (Tay et al., 2022) mark the open ends of the topic.

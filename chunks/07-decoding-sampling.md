@@ -6,9 +6,9 @@ nav_order: 8
 
 # Chunk 07: Decoding & Sampling
 
-**Purpose.** Explain how a language model turns a probability distribution over "next token" into an actual chosen token — and why this single step is the root cause of non-deterministic LLM output.
-**Previously.** Chunk 06 covered context windows and how models behave as input grows toward and past their context limit.
-**Today.** We cover greedy decoding, temperature, top-k, and top-p (nucleus) sampling — the mechanics of picking a token — and why "the same prompt" can produce different answers.
+**Purpose.** Explain how a probability distribution over the next token becomes a single selected token, and why this step is one mechanism behind run-to-run variation in LLM output.
+**Previously.** Chunk 06 covered context windows and model behavior as input length approaches and exceeds the context limit.
+**Today.** Greedy decoding, temperature scaling, top-k and nucleus (top-p) sampling; the degeneration failure modes that motivate each; and the residual nondeterminism that persists even at temperature zero.
 
 ![Example generations continuing the same initial sentence under different decoding strategies: maximization and top-k truncation lead to copious repetition (highlighted in blue), sampling with and without temperature tends toward incoherence (highlighted in red), and Nucleus Sampling largely avoids both issues.](https://ar5iv.labs.arxiv.org/html/1904.09751/assets/x3.png)
 
@@ -18,89 +18,86 @@ nav_order: 8
 
 ## Beginner
 
-Every time a language model generates text, it doesn't produce a word directly. It produces a giant list of every possible next word (technically "token," a word or word-piece), each with a probability attached — like "the" at 40%, "a" at 25%, "an" at 8%, and thousands of other words with tiny slivers of probability. The interesting question is: given that list, how does the model pick just one?
+Chunk 00 established that at each generation step the model computes a probability distribution over its entire vocabulary. Decoding is what happens next: one token must be selected from that distribution. The selection rule is not part of the model. It is a policy applied to the model's output, and different policies produce visibly different text from the same underlying distribution.
 
-There are two basic strategies, and they feel very different.
+The simplest policy is **greedy decoding**: always select the single most probable token. For tasks with an essentially correct answer this behaves reasonably, but for open-ended text it produces flat, repetitive output that tends to loop — a phrase, once emitted, often becomes the most probable thing to emit again.
 
-The first is **greedy decoding**: always pick the single most likely word. This sounds like the obvious "correct" choice, but in practice it produces oddly flat, repetitive text — imagine a person who, when unsure what to say, always defaults to the blandest possible phrase. Greedy text tends to loop ("I love it. I love it. I love it.") because the safest next word after a safe word is often itself.
+The alternative is **sampling**: select a token at random, in proportion to its probability. A token with probability 0.4 is selected about 40% of the time; a token with probability 0.05, about 5% of the time. The process works like a weighted lottery in which every token in the vocabulary holds tickets in proportion to its probability. Sampling produces varied, natural-sounding text, but an unrestricted draw occasionally lands on an implausible token from far down the list, and one bad token can derail everything generated after it.
 
-The second is **sampling**: treat the probability list like a weighted lottery. A word with 40% probability wins 40% of the time, a word with 5% probability wins 5% of the time, but it's not guaranteed — you might occasionally draw a rare word. This introduces variety and feels more natural, but drawn too loosely, it can also occasionally pick something bizarre from far down the list.
+Three controls adjust this draw. **Temperature** reshapes the distribution before sampling: low temperature concentrates probability on the already-likely tokens (approaching greedy behavior), while high temperature flattens the distribution and gives unlikely tokens a better chance. **Top-k** discards all but the k most probable tokens before drawing. **Top-p** (nucleus sampling) instead keeps the smallest group of top tokens whose probabilities together reach a threshold — for example, the fewest tokens covering 90% of the total probability — so the size of the candidate pool adjusts to how confident the model is.
 
-**Temperature** is a dial that controls how "flat" or "peaked" that lottery is. Low temperature makes the model more conservative, favoring the already-likely words even more strongly (closer to greedy). High temperature flattens the odds, giving unlikely words a better shot, which makes output more surprising and sometimes less coherent.
-
-**Top-k** and **top-p** are ways of trimming the lottery before you draw from it, so you're never drawing from the truly absurd, near-zero-probability tail. Top-k keeps only the k most likely words on the ticket. Top-p (also called nucleus sampling) keeps however many words are needed to cover a target percentage of total probability — say, the fewest words that together add up to 90%.
-
-The practical upshot: because word selection involves a randomized draw, asking a chatbot the exact same question twice can yield different wording, different structure, or even a different answer — not because the model is broken, but because that's how the lottery works.
+One consequence matters immediately: because selection involves a randomized draw, submitting the same prompt twice can legitimately produce different wording, structure, or conclusions. This is expected behavior of a sampled system, not a malfunction.
 
 ## Practitioner
 
-When you call an LLM API, you're almost always given at least two levers over this process: `temperature` and `top_p` (some APIs also expose `top_k`). Understanding what they actually do — mathematically, not just vibes — matters for building anything that depends on consistent output.
+LLM APIs expose this machinery primarily through two parameters, `temperature` and `top_p` (some also expose `top_k`). They act at different points in the pipeline: temperature rescales the raw logits before the softmax converts them to probabilities, while top-k and top-p truncate the resulting candidate pool before the draw. When both are set, the distribution is reshaped first and truncated second, so the two compose. A common operational error is moving both aggressively at once, which makes the effect of either one difficult to attribute; the standard advice is to tune one while holding the other at its default.
 
-**Temperature** rescales the logits (the raw, pre-probability scores) before the softmax turns them into probabilities. Concretely, each logit is divided by the temperature value before the softmax exponential is applied. Temperature near 0 sharpens the distribution until it collapses onto the single highest-scoring token (equivalent to greedy decoding). Temperature of 1 leaves the distribution as the model originally computed it. Temperature above 1 flattens the distribution, pulling probability mass toward the tail and increasing the odds of picking a less likely token.
+Settings are a per-task decision, not a global one:
 
-**Top-p / top-k** are separate, complementary controls that operate on the shape of the candidate pool, not the sharpness of the weighting. Top-k restricts sampling to a fixed-size shortlist (e.g., the 40 most likely tokens) regardless of how the model's confidence is distributed. Top-p restricts the pool dynamically — take the smallest set of top tokens whose cumulative probability crosses the threshold p, which adapts pool size to how confident the model is at each step (a very confident step might have a nucleus of 2 tokens; an uncertain one might need 50).
-
-A useful mental model for combining these:
-
-| Setting | Behavior | When to use |
+| Setting | Behavior | Appropriate tasks |
 |---|---|---|
-| temperature=0 (or near 0), no top-p change | Deterministic-ish, always picks highest-probability token | Extracting structured data, classification, code generation, tool-call arguments — anything where you want the "best" answer, not variety |
-| temperature=0.7, top_p=0.9 | Balanced — some variety, still coherent | General chat, drafting, summarization |
-| temperature=1.0+, top_p=0.95+ | High variety, more surprising, occasional incoherence | Brainstorming, creative writing, generating diverse samples for later filtering/voting |
+| temperature ≈ 0 | Near-deterministic; selects the highest-probability token | Structured extraction, classification, code generation, tool-call arguments |
+| temperature ≈ 0.7, top_p ≈ 0.9 | Moderate variety, coherent | General chat, drafting, summarization |
+| temperature ≥ 1.0, top_p ≥ 0.95 | High variety, occasional incoherence | Brainstorming, creative writing, generating diverse candidates for later filtering or voting |
 
-The counterintuitive part practitioners hit early: **`temperature=0` does not guarantee you'll get the same output every time you call the API**, even for the identical prompt. This is not a sampling issue at all — it's a side effect of how inference servers batch requests. Modern serving stacks (like vLLM) group multiple simultaneous requests together for efficiency, and floating-point arithmetic on GPUs is not associative — summing the same numbers in a different order (because the batch composition changed) produces microscopically different results. Those tiny differences can occasionally flip which token has the (technically) highest logit, cascading into a different generated sequence. This has been demonstrated concretely by Thinking Machines Lab's engineering work on "batch invariance" in inference kernels (see References).
+A concrete case: a pipeline that extracts invoice fields into JSON should run at temperature 0, because any variation between runs is pure cost — there is one correct extraction, and the highest-probability continuation is the best available estimate of it. A step that proposes ten candidate product names should run at temperature 1.0 or above, because the value of the output is its diversity, and a downstream filter can discard weak candidates.
 
-Practical implication: if you need output stability, set temperature to 0 (or very low) to remove sampling-driven randomness, but don't build systems that assume byte-for-byte identical output across calls — build in tolerance, retries, or validation instead.
+The caveat practitioners encounter early: **temperature 0 does not guarantee byte-identical output across calls**, even for an identical prompt. The residual variation is not a sampling effect at all; it originates in how production inference servers execute the computation, and the Expert section covers the mechanism. The operational rule that follows is to treat temperature 0 as "highly consistent," never as "reproducible by construction." Systems that consume model output should validate structure rather than compare exact strings, and should tolerate or retry on minor variation rather than treating it as an error.
 
 ## Expert
 
-Formally, at each generation step the model outputs a vector of logits `z` over the vocabulary. These are converted to a probability distribution via softmax: `p_i = exp(z_i / T) / Σ_j exp(z_j / T)`, where `T` is the temperature. As `T → 0`, the distribution converges to a one-hot vector on `argmax(z)` — greedy decoding. As `T → ∞`, the distribution approaches uniform over the vocabulary.
+At each step the model emits a logit vector $$z$$ over the vocabulary. Temperature-scaled softmax converts it to a distribution:
 
-**Decoding strategies** fall into two families:
+$$P(x_i) = \frac{\exp(z_i / T)}{\sum_j \exp(z_j / T)}$$
 
-- *Maximization-based* — greedy search (take argmax at each step) and beam search (maintain the top-b partial sequences by cumulative log-probability, expanding and pruning at each step). Beam search was developed for speech recognition and machine translation, where it reliably outperforms greedy decoding on tasks with a roughly correct, low-entropy target output.
-- *Stochastic* — sample from the (possibly reshaped) distribution: temperature sampling, top-k sampling, and top-p (nucleus) sampling.
+As $$T \to 0$$, the distribution converges to a one-hot vector on $$\arg\max_i z_i$$, recovering greedy decoding; $$T = 1$$ recovers the model's distribution unchanged; $$T > 1$$ flattens it, moving probability mass toward the tail, with the uniform distribution as the limit $$T \to \infty$$. Temperature changes the sharpness of the weighting; it never changes the ranking of tokens.
 
-Holtzman et al. (2020), "The Curious Case of Neural Text Degeneration," is the key diagnostic and prescriptive paper here. They show that maximization-based decoding (greedy and beam search) on open-ended generation tasks produces text that is measurably less diverse and more repetitive than human text along multiple distributional statistics, and that this repetition is often self-reinforcing — once a model repeats a phrase, the probability of repeating it again increases. Their proposed fix, **nucleus (top-p) sampling**, truncates the distribution's unreliable low-probability tail dynamically: at each step, sample only from the smallest set of tokens whose cumulative probability mass exceeds threshold p, then renormalize and sample within that set. This adapts the candidate pool size to the model's local confidence, unlike fixed-k truncation.
+Decoding strategies divide into two families. *Maximization-based* methods — greedy search, and beam search, which maintains the top-$$b$$ partial sequences by cumulative log-probability — approximate the highest-likelihood output sequence, and perform well on low-entropy tasks such as machine translation where a roughly correct target exists. *Stochastic* methods sample from a reshaped or truncated distribution. **Top-k sampling** (Fan, Lewis & Dauphin, 2018) restricts the draw to the $$k$$ highest-probability tokens and renormalizes; it was introduced for open-ended story generation, where it outperformed both pure sampling and beam search. **Nucleus (top-p) sampling** (Holtzman et al., 2020) instead samples from the smallest set $$V^{(p)}$$ satisfying
 
-**Top-k sampling** predates and is complementary to nucleus sampling; it was introduced for open-ended generation by Fan, Lewis, and Dauphin (2018), "Hierarchical Neural Story Generation," who used it to improve story generation quality over pure sampling or beam search by restricting each draw to the k highest-probability tokens before renormalizing. Its limitation, which nucleus sampling addresses, is that a fixed k is too restrictive when the distribution is flat (many plausible continuations) and too permissive when the distribution is peaked (few plausible continuations).
+$$\sum_{x \in V^{(p)}} P(x) \geq p$$
 
-**Why greedy/beam degenerate**: language models are trained to maximize likelihood of human text under teacher forcing, but human text is not itself the argmax path through the model's own distribution at each step — human writing contains locally "suboptimal" (lower-probability) word choices that maximization-based decoding will never select, and forcing pure maximization pushes the output off the manifold of typical human text, into repetitive high-confidence loops.
+after renormalizing within that set. The argument for nucleus over top-k is that the appropriate candidate-set size varies with the shape of the distribution: a fixed $$k$$ is too restrictive when the distribution is flat (many comparably plausible continuations) and too permissive when it is peaked (a confident step may warrant a nucleus of two or three tokens). Adaptive truncation tracks the model's local confidence; fixed truncation cannot.
 
-Two open questions worth flagging: (1) Beyond sampling randomness, what other sources of run-to-run non-determinism exist in production inference (mixed-precision arithmetic, non-associative floating-point summation order under dynamic batching, MoE routing decisions), and how much of "non-determinism" attributed to temperature is actually infrastructure-level? (2) How should the exploration/quality tradeoff in decoding be tuned per-task — is there a principled way to set temperature/top-p per use case rather than by convention/trial-and-error?
+Holtzman et al. (2020) supply the empirical case for truncated sampling in open-ended generation. Their degeneration finding is two-sided. Maximization-based decoding produces text that is measurably less diverse and more repetitive than human text, and the repetition is self-reinforcing: each occurrence of a repeated phrase raises the probability of repeating it again, so greedy and beam decoding fall into loops they cannot exit. Pure sampling from the full distribution avoids repetition but produces incoherence, because the low-probability tail — individually negligible tokens whose mass is collectively substantial — is sampled often enough to derail generation. Human text, notably, is not the argmax path through the model's own distribution; it routinely contains locally lower-probability choices that maximization can never select. Truncation methods are the compromise: cut the unreliable tail, sample within what remains.
+
+Greedy decoding at $$T = 0$$ removes sampling variance but is deterministic only under fixed serving conditions. The Thinking Machines Lab post "Defeating Nondeterminism in LLM Inference" (2025) — an engineering blog post, not a peer-reviewed paper — traces the residual variation concretely: floating-point addition is not associative, and GPU kernels select different reduction strategies (different summation orders) depending on batch size and shape. Because a request's batch composition depends on whatever concurrent traffic the server is handling, the same prompt can be routed through numerically different computations across calls. The resulting discrepancies are tiny, but a near-tied pair of top logits can flip, and one flipped token cascades autoregressively into a different sequence. The post demonstrates that batch-invariant kernels restore true determinism at some throughput cost; absent such kernels, greedy decoding on a shared production server is consistent but not reproducible.
 
 ---
 
 ## Implications for agentic-dev
 
-This chunk explains a failure mode every agentic-dev user eventually hits: **running the identical Claude Code prompt twice and getting different results.** The proximate cause is sampling — at temperature > 0, each generation step draws from a probability distribution rather than always taking the top token, so the exact sequence of tokens (and therefore tool calls, file edits, or reasoning steps) can legitimately differ between runs.
+Decoding explains a failure mode every agent builder encounters: an identical prompt run twice produces different tool calls, edits, or conclusions. At temperature above zero this is sampling working as designed, and even at temperature zero the batch-dependence described above leaves a small residue of variation.
 
-Setting `temperature=0` (or as close to it as an API allows) collapses the sampling step to argmax and removes this source of variance — but, as covered above, it does **not** fully guarantee determinism. Production inference servers batch requests dynamically for throughput, and floating-point summation is not associative, so the exact same prompt can be numerically routed through a slightly different computation depending on what else is running on the GPU at that moment. That can flip a near-tied logit and change the selected token, even at temperature 0. This is a solvable but not universally solved problem — see Thinking Machines Lab's "batch invariance" engineering work below for how far current mitigation goes.
-
-Concretely, this should shape how you build and debug agent loops:
-
-- **Don't build tool-call parsing that assumes byte-identical output.** If your agent loop parses a model's output to extract a function call, JSON blob, or file diff, treat minor phrasing/formatting variance as expected, not a bug — use structured output modes (JSON mode, function-calling schemas) rather than regexing free text, since those reduce (but don't eliminate) the surface area sampling can perturb.
-- **Lower temperature for steps where you need reliability, not creativity** — tool-call argument generation, code edits, structured extraction — and reserve higher temperature for steps like brainstorming or drafting where variety is a feature.
-- **Don't treat a single failed run as proof of a broken prompt or broken tool.** Because output is sampled, one bad run can be noise; before concluding your agent's instructions are wrong, check whether the behavior reproduces across several runs.
-- **Set reproducibility expectations correctly in tests/evals for agents.** If you're writing automated tests against LLM output, "exact string match" tests are inherently flaky by construction — even at temperature 0 — so prefer semantic/structural assertions (does the tool call have the right shape? does the file compile?) over exact text comparison.
+- **Format reliability belongs to schema enforcement, not sampling settings.** An agent loop that parses structured output should rely on tool schemas, JSON modes, or constrained decoding — mechanisms that restrict which tokens can be emitted — rather than on low temperature, which merely makes malformed output less likely. This is the same distinction chunk 00 drew between steering a distribution and constraining it.
+- **Set temperature per step, not per system.** Tool-call argument generation, code edits, and extraction warrant temperature near zero; brainstorming and candidate generation warrant more. A single global setting is almost always wrong for one of these.
+- **"It worked once" is weak evidence under stochastic decoding.** A prompt or agent behavior validated on a single run has been tested against one draw from a distribution. Verification gates and CI for agent systems should run multiple trials and assert structural properties — the tool call validates against its schema, the edited file compiles, the tests pass — rather than comparing output text. Exact-string-match assertions on model output are flaky by construction, temperature zero included.
+- **Distinguish noise from defect before debugging.** A single failed run does not establish that instructions or tools are broken; reproduction across several runs does. Chunk 00's path-dependence point compounds this — one differently-sampled early token can redirect an entire trajectory.
 
 ---
 
+## Exercises
+
+1. **(Beginner)** Construct a toy distribution over five next words with probabilities summing to 1 (for example 0.40, 0.25, 0.15, 0.12, 0.08). State what greedy decoding selects, then simulate three sampling runs using a random-number table or die. Explain why two runs that agree on the first token can still diverge by the third.
+2. **(Practitioner)** Choose `temperature` and `top_p` values for three tasks — generating a code patch, brainstorming twenty feature ideas, and extracting dates from contracts into JSON — and justify each choice in terms of whether output variation is a cost or a benefit for that task. State which of the three still requires structural validation even at your chosen settings, and why.
+3. **(Expert)** For logits $$z = (2.0, 1.0, 0.0)$$ over a three-token vocabulary, compute the softmax distribution at $$T = 0.5$$, $$T = 1$$, and $$T = 2$$. Confirm that the ranking is unchanged in all three cases, and describe how the probability of the top token behaves as $$T \to 0$$ and as $$T \to \infty$$.
+
 ## Checklist
 
-- [ ] I can explain the difference between greedy decoding and sampling in plain language.
-- [ ] I know what the temperature parameter mathematically does to the softmax distribution.
-- [ ] I can distinguish top-k (fixed-size candidate pool) from top-p/nucleus (dynamic, probability-mass-based candidate pool).
-- [ ] I can explain why greedy/beam search tend to produce repetitive text (Holtzman et al., 2020).
-- [ ] I understand why temperature=0 reduces but does not fully guarantee deterministic output.
-- [ ] I know to avoid exact-string-match assumptions when parsing LLM tool calls in an agent loop.
+After this chunk you should be able to:
+
+- [ ] Describe decoding as a selection policy applied to the model's distribution, distinct from the distribution itself.
+- [ ] Write the temperature-scaled softmax and state its limiting behavior at $$T \to 0$$, $$T = 1$$, and $$T > 1$$.
+- [ ] Define top-k and nucleus (top-p) sampling, and state the argument for adaptive over fixed truncation.
+- [ ] State both sides of the degeneration finding: self-reinforcing repetition under maximization, incoherence under pure sampling, and truncation as the compromise.
+- [ ] Explain why temperature 0 is deterministic only under fixed serving conditions, citing floating-point non-associativity and batch-dependent kernel reductions.
+- [ ] Justify schema enforcement over sampling settings for format-critical agent steps, and multi-run verification over single-run evidence.
 
 ## References
 
-1. "The Curious Case of Neural Text Degeneration" (Ari Holtzman, Jan Buys, Li Du, Maxwell Forbes, Yejin Choi; ICLR 2020) — https://arxiv.org/abs/1904.09751
-2. "Hierarchical Neural Story Generation" (Angela Fan, Mike Lewis, Yann Dauphin; ACL 2018) — https://arxiv.org/abs/1805.04833
-3. "Defeating Nondeterminism in LLM Inference" (Thinking Machines Lab, 2025) — https://thinkingmachines.ai/blog/defeating-nondeterminism-in-llm-inference/
+1. Holtzman, A., Buys, J., Du, L., Forbes, M., & Choi, Y. "The Curious Case of Neural Text Degeneration." *ICLR* (2020). arXiv:1904.09751. https://arxiv.org/abs/1904.09751
+2. Fan, A., Lewis, M., & Dauphin, Y. "Hierarchical Neural Story Generation." *ACL* (2018). arXiv:1805.04833. https://arxiv.org/abs/1805.04833
+3. Thinking Machines Lab. "Defeating Nondeterminism in LLM Inference." Engineering blog post (2025). https://thinkingmachines.ai/blog/defeating-nondeterminism-in-llm-inference/
 
 ## Chunk summary
 
-Decoding is the last-mile step where a probability distribution becomes an actual token: greedy decoding always takes the top choice and tends toward bland, repetitive output, while temperature, top-k, and top-p reshape or truncate the distribution to control how much randomness enters that choice. This randomness is the direct reason identical prompts can yield different completions, and it's why agentic-dev workflows should treat temperature=0 as "much more consistent," not "guaranteed identical" — a distinction rooted in how GPU batching and floating-point arithmetic interact with inference, not just in sampling theory.
+Decoding converts the model's next-token distribution into a selected token, and the choice of selection policy shapes the text as much as the distribution does. Maximization-based decoding degenerates into self-reinforcing repetition; pure sampling degenerates into tail-driven incoherence; temperature scaling and truncated sampling — fixed-size top-k (Fan et al., 2018) or adaptive nucleus sampling (Holtzman et al., 2020) — occupy the space between. Sampling is one mechanism behind run-to-run variation, but not the only one: floating-point non-associativity under batch-dependent GPU reductions means temperature 0 is consistent rather than reproducible on shared infrastructure (Thinking Machines Lab, 2025). For agentic work the load-bearing consequences are that format guarantees come from schema enforcement rather than sampling settings, and that single-run success is weak evidence — verification requires repeated trials and structural assertions.

@@ -7,28 +7,29 @@ permalink: /
 
 # LLM Foundations
 
-A prerequisite curriculum on how large language models actually work — grounded in cited papers, not vibes. It exists to be read *before* [agentic-dev](https://jonaprieto.github.io/agentic-dev/), a workshop on Claude Code mastery: agentic-dev tells you what to do (write a CLAUDE.md, structure your prompts, use plan mode); this fills in why those things work, at the level of the model itself.
+A prerequisite curriculum on how large language models work, written to be read before [agentic-dev](https://jonaprieto.github.io/agentic-dev/), a hands-on workshop on Claude Code. agentic-dev teaches practice — CLAUDE.md files, prompt structure, plan mode, review gates. This curriculum supplies the theory those practices rest on, with primary sources cited throughout.
 
 ## The idea
 
-Every practice in an agentic coding workflow is downstream of some mechanism in how LLMs are built and run. Context windows have limits because attention has a cost. Prompts with structure and examples work because of in-context learning. Models refuse or comply consistently because of RLHF, not because of a rule someone hardcoded. Agents drift and compound errors over long sessions because every mechanism above reappears, repeatedly, inside a loop.
+Every practice in an agentic coding workflow is a response to a specific property of the underlying model. Context windows are limited because attention has a quadratic cost. Structured prompts with examples work because of in-context learning. Models refuse or comply consistently because of preference training, not hardcoded rules. Agents drift and compound errors over long sessions because each of these mechanisms reappears, repeatedly, inside a loop.
 
-Knowing this doesn't just satisfy curiosity — it changes what you expect from the tool, what you check before trusting its output, and where the real levers are when something isn't working.
+Understanding the mechanisms changes how you work: what you expect from the tool, what you verify before trusting its output, and which lever you reach for when something fails.
 
 ## How this works: chunks
 
-Eleven chunks, numbered 00 through 10, each covering one mechanism. Every chunk has the same shape:
+Eleven chunks, numbered 00 through 10, each covering one mechanism. Every chunk has the same structure:
 
-- **Beginner** — plain language, no math, no unexplained jargon
-- **Practitioner** — the mental model you need if you use LLMs daily but haven't studied the theory
-- **Expert** — the formal treatment, the actual papers, and the open questions
-- **Implications for agentic-dev** — the concrete bridge from "here's the mechanism" to "here's the agentic-dev practice it explains"
+- **Beginner** — the concept in plain language, assuming no technical background
+- **Practitioner** — the operational knowledge for someone who uses LLMs daily
+- **Expert** — the formal treatment: definitions, equations, primary papers, and open research questions
+- **Implications for agentic-dev** — the specific practice each mechanism explains
+- **Exercises** — short problems spanning the three tiers
 
-Read them in order the first time through — later chunks build on earlier ones and hand off directly into agentic-dev's own material at the end.
+Chunks build on one another; read them in order on a first pass. The final chunk hands off directly into agentic-dev's own material.
 
 ## Chunks
 
-See the full list on the [Chunks](chunks/) page.
+The full list is on the [Chunks](chunks/) page.
 
 ---
 

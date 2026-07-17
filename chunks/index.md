@@ -6,9 +6,9 @@ nav_order: 2
 
 # Chunks
 
-Eleven chunks, in order. Each one covers one mechanism, at three levels — Beginner, Practitioner, Expert — with verified paper references and a closing "Implications for agentic-dev" section connecting it to something you'll actually run into in an agentic coding tool.
+Eleven chunks, in order. Each covers one mechanism at three levels — Beginner, Practitioner, Expert — followed by an "Implications for agentic-dev" section connecting the mechanism to a concrete practice in agentic coding tools, exercises spanning the three tiers, and references to the primary literature.
 
-They build on each other. Read them in order the first time through.
+Chunks build on one another; read them in order on a first pass.
 
 | # | Chunk | What it explains |
 |---|-------|---|
