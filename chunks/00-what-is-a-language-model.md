@@ -16,7 +16,7 @@ nav_order: 1
 
 ---
 
-## Beginner
+## Curiosity
 
 A language model is a system trained on a very large amount of text to answer one question: given a passage, what is likely to come next? Presented with "The capital of France is", it assigns high probability to "Paris" and negligible probability to unrelated words. To produce longer text, the system selects a likely next word, appends it to the passage, and asks the question again — now predicting what follows "The capital of France is Paris". Repeated many times, this single operation produces paragraphs, essays, and working code. (In practice models operate on *tokens* — units slightly smaller than words — which chunk 01 covers.)
 
@@ -24,7 +24,7 @@ The phone-keyboard autocomplete comparison is accurate as far as the mechanism g
 
 This distinction — simple objective, rich learned structure — is the correct frame for everything in this curriculum. When later chunks discuss why prompts work, why models hallucinate, or why agents drift, each explanation traces back to the fact that the system is, mechanically, a next-token predictor, and to what that mechanism does and does not guarantee.
 
-## Practitioner
+## Builder
 
 The operational picture, one level down. At each step of generating a response, the model computes a probability distribution over its entire vocabulary, conditioned on everything currently in context: the system prompt, the conversation history, retrieved documents, tool outputs, and every token of the response generated so far. One token is then selected from that distribution (how it is selected — greedy, temperature-scaled, nucleus sampling — is chunk 07's subject), appended, and the computation repeats.
 
@@ -81,8 +81,8 @@ Later chunks refine this picture (attention in chunk 02, in-context learning in 
 
 ## Exercises
 
-1. **(Beginner)** Take the sentence "The weather in Bogotá in July is usually" and write down five plausible next words with rough probabilities that sum to 1. Then pick the most likely word, append it, and repeat twice more. Note how each choice constrains the next — this is the autoregressive loop performed by hand.
-2. **(Practitioner)** Write two versions of a prompt asking for a function's documentation: one ambiguous ("tell me about parsing here") and one specific ("document the `parse_date(s: str) -> datetime` function: purpose, parameters, return value, one example"). Explain, in terms of probability mass over continuations, why the second reliably produces the intended format.
+1. **(Curiosity)** Take the sentence "The weather in Bogotá in July is usually" and write down five plausible next words with rough probabilities that sum to 1. Then pick the most likely word, append it, and repeat twice more. Note how each choice constrains the next — this is the autoregressive loop performed by hand.
+2. **(Builder)** Write two versions of a prompt asking for a function's documentation: one ambiguous ("tell me about parsing here") and one specific ("document the `parse_date(s: str) -> datetime` function: purpose, parameters, return value, one example"). Explain, in terms of probability mass over continuations, why the second reliably produces the intended format.
 3. **(Expert)** A model reports cross-entropy loss of 2.3 nats per token on a held-out corpus. Compute its perplexity, and explain what that number means as a branching factor. Then explain why two models with identical perplexity can differ substantially in downstream task performance — what does the aggregate loss not measure?
 
 ## Checklist

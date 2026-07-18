@@ -16,7 +16,7 @@ nav_order: 7
 
 ---
 
-## Beginner
+## Curiosity
 
 A context window is the maximum number of tokens a model can process in a single request. The system prompt, the conversation history, pasted documents, tool outputs, and the response being generated all draw on this one budget. The limit is a hard architectural property: content beyond it must be truncated, summarized, or dropped before the model sees it.
 
@@ -26,7 +26,7 @@ A long meeting offers a rough parallel: participants recall the opening agenda a
 
 These two properties combine into the distinction between *advertised* and *effective* context length. A model may accept a million tokens while reliably tracking and using far fewer, particularly on tasks harder than retrieving a single planted fact. The advertised number is a capacity claim; the effective number is a performance claim, and the two are measured differently. The practical consequence is immediate: when preparing a long input, the placement of critical material — first or last, never buried in the middle — matters as much as whether it fits.
 
-## Practitioner
+## Builder
 
 Operationally, presence in context is a weak guarantee. Every token in the window is visible to the model at every generation step, but attention does not weight positions equally, so placement decisions are part of prompt design rather than an afterthought. Four rules follow from the U-shaped recall curve:
 
@@ -77,8 +77,8 @@ Chunk 02 covers the quadratic attention cost that makes long context expensive t
 
 ## Exercises
 
-1. **(Beginner)** Construct a document of roughly 30 paragraphs of filler text and insert one distinctive fact (an invented product code) at the beginning, middle, or end across three trials. Query a model for the fact in each trial and record accuracy by position. State which empirical finding this procedure replicates and what curve you would expect over many trials.
-2. **(Practitioner)** A prompt consists of a 10-page pasted specification with a critical constraint in the fifth page ("all currency values must be stored as integer cents"), followed by a request to generate a database schema. Redesign the prompt so the constraint survives positional bias, and justify each change by reference to primacy, recency, and proximity to the request.
+1. **(Curiosity)** Construct a document of roughly 30 paragraphs of filler text and insert one distinctive fact (an invented product code) at the beginning, middle, or end across three trials. Query a model for the fact in each trial and record accuracy by position. State which empirical finding this procedure replicates and what curve you would expect over many trials.
+2. **(Builder)** A prompt consists of a 10-page pasted specification with a critical constraint in the fifth page ("all currency values must be stored as integer cents"), followed by a request to generate a database schema. Redesign the prompt so the constraint survives positional bias, and justify each change by reference to primacy, recency, and proximity to the request.
 3. **(Expert)** A model has 48 layers, 40 attention heads of dimension 128, and serves fp16 with full multi-head attention. Compute the KV cache size per token and the total cache size at a 200K-token sequence length. Then recompute assuming grouped-query attention with 8 key-value heads, and state the reduction factor.
 
 ## Checklist

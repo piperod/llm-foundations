@@ -16,7 +16,7 @@ nav_order: 9
 
 ---
 
-## Beginner
+## Curiosity
 
 A language model can produce text that is fluent, specific, well-structured, and false. This failure mode is called **hallucination**: output that has the shape of a correct answer — the right register, the right level of detail, plausible names and numbers — without being anchored to fact. The behavior resembles a well-read acquaintance who, when asked something outside their knowledge, supplies an invented detail as smoothly as a remembered one; the fabrication is not deliberate, and nothing in the delivery marks it.
 
@@ -24,7 +24,7 @@ The mechanism follows from the training objective established in chunk 00. The m
 
 **Calibration** names the property that would mitigate this. A model is well-calibrated when its stated confidence tracks its accuracy: among answers offered at 90% confidence, roughly 90% are correct. Research reviewed below shows that models often carry usable *internal* uncertainty signal, while getting that signal expressed honestly in output text is a separate and harder problem. The gap between what a model represents internally and what it states is the organizing theme of this chunk.
 
-## Practitioner
+## Builder
 
 Given that fluency carries no evidential weight, the practical questions are where hallucination risk concentrates and which interventions measurably shift model behavior.
 
@@ -76,8 +76,8 @@ The same findings justify why agentic workflows treat stated confidence as weak 
 
 ## Exercises
 
-1. **(Beginner)** Ask a model one common factual question and one obscure one (for example, a well-known capital city versus the exact publication date of a minor technical report). Compare the two answers for tone, hedging, and specificity, and record whether anything in the surface text distinguishes the answer likely to be correct from the one likely to be invented.
-2. **(Practitioner)** Take a model-generated answer about a software library that contains (a) a general design claim, (b) a function name, (c) a keyword-argument list with default values, and (d) a version number with a release date. Rank the four claim types by hallucination risk, and justify the ranking in terms of training-data redundancy and the specificity of each claim.
+1. **(Curiosity)** Ask a model one common factual question and one obscure one (for example, a well-known capital city versus the exact publication date of a minor technical report). Compare the two answers for tone, hedging, and specificity, and record whether anything in the surface text distinguishes the answer likely to be correct from the one likely to be invented.
+2. **(Builder)** Take a model-generated answer about a software library that contains (a) a general design claim, (b) a function name, (c) a keyword-argument list with default values, and (d) a version number with a release date. Rank the four claim types by hallucination risk, and justify the ranking in terms of training-data redundancy and the specificity of each claim.
 3. **(Expert)** Design a small evaluation that distinguishes a calibrated model from an overconfident one. Specify the question set, how confidence is elicited (verbalized percentage, P(True), or token probability), the binning scheme, and the plot: a reliability diagram of empirical accuracy against stated confidence, with the diagonal as the calibrated reference. State what curve an overconfident model produces (accuracy below the diagonal at high confidence), and report ECE as the summary statistic.
 
 ## Checklist

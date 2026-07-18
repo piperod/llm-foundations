@@ -16,7 +16,7 @@ nav_order: 6
 
 ---
 
-## Beginner
+## Curiosity
 
 In-context learning is the phenomenon in which a model with fixed weights behaves as if it had learned a new task from examples supplied in the prompt itself. Show the model two examples of converting messy notes into a table, then present a third set of notes, and it produces a table in the demonstrated format. No parameter is adjusted, nothing is stored for later, and closing the conversation discards everything: each response is a fresh forward pass conditioned on the full prompt. The situation is comparable to giving a new employee an instruction sheet and two worked examples immediately before the task, rather than sending them through a training course — the training course (pretraining and the fine-tuning of chunk 04) already happened and is over.
 
@@ -24,7 +24,7 @@ The term "learning" is therefore somewhat misleading. What actually occurs is co
 
 One consequence follows immediately. The arrangement of a prompt matters as much as its content, because a clearly delimited, consistently formatted example is a stronger pattern signal than the same information embedded in a paragraph of prose. Prompting does not reprogram the model; it presents a cleaner pattern to continue.
 
-## Practitioner
+## Builder
 
 The operational principle: the weights are fixed, the prompt is the only control available at inference time, and it operates by conditioning the next-token distribution on everything currently in context. Effective prompting is not a way of tricking the model; it is the supply of more informative conditioning context, so that the model's distribution over completions concentrates on the intended output.
 
@@ -98,8 +98,8 @@ The prompting chunk is therefore best read as a direct response to how ICL works
 
 ## Exercises
 
-1. **(Beginner)** Explain why the word "learning" in "in-context learning" is misleading. State precisely what changes and what does not change in the model between two turns of a conversation, and what happens to in-context information when the conversation ends.
-2. **(Practitioner)** Choose a format-sensitive task (for example, extracting entries as `Name | Category | Confidence`). Write a zero-shot prompt and a 3-shot prompt for it. Predict the characteristic failure mode of each: what the zero-shot version gets wrong across repeated calls, and what the few-shot version can still get wrong (for example, when a test input deviates structurally from all three exemplars).
+1. **(Curiosity)** Explain why the word "learning" in "in-context learning" is misleading. State precisely what changes and what does not change in the model between two turns of a conversation, and what happens to in-context information when the conversation ends.
+2. **(Builder)** Choose a format-sensitive task (for example, extracting entries as `Name | Category | Confidence`). Write a zero-shot prompt and a 3-shot prompt for it. Predict the characteristic failure mode of each: what the zero-shot version gets wrong across repeated calls, and what the few-shot version can still get wrong (for example, when a test input deviates structurally from all three exemplars).
 3. **(Expert)** Using the circuit description in Olsson et al. (2022), classify which features of a prompt an induction head can exploit and which it cannot. Consider: repeated literal delimiter tokens; exemplars sharing a consistent token-level structure; an instruction stated once and never repeated; a constraint expressed as a semantic paraphrase of an earlier constraint. Justify each classification in terms of the $$[A][B] \dots [A] \rightarrow [B]$$ matching operation.
 
 ## Checklist

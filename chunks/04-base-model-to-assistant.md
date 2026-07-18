@@ -16,7 +16,7 @@ nav_order: 5
 
 ---
 
-## Beginner
+## Curiosity
 
 A base model is the direct product of pretraining (chunk 03): a next-token predictor with no notion of a user, a request, or a role. Given the prompt "What is the capital of France?", a base model does not necessarily answer. It may continue with "What is the capital of Germany?" — a plausible continuation if the prompt resembles a quiz worksheet — because its only learned behavior is to extend text the way its training corpus would. Answering is one continuation among many, and nothing in the pretraining objective privileges it. A base model is comparable to an actor who has memorized every script ever written but has been assigned no character; post-training assigns the role.
 
@@ -28,7 +28,7 @@ The second is **preference learning**. Humans, or in some pipelines AI systems f
 
 The combined result is an assistant model: a system that answers rather than continues, declines certain requests, expresses uncertainty, and maintains a recognizable voice. These behaviors originate in post-training. Pretraining supplies the knowledge; post-training determines how that knowledge is deployed in conversation.
 
-## Practitioner
+## Builder
 
 Interacting with a base-model endpoint makes the effect of post-training concrete. Given an instruction, a base model may complete the instruction as though it were part of a longer document, generate both sides of a dialogue, or drift into adjacent text. The model has capability without conversational judgment: the knowledge required to answer is present, but nothing in its training selects "respond to the request" over other statistically plausible continuations.
 
@@ -86,8 +86,8 @@ Several behaviors that agentic workflows depend on are post-training artifacts r
 
 ## Exercises
 
-1. **(Beginner)** For the prompt "What are three good exercises for lower-back pain?", write one plausible base-model continuation that is *not* an answer (for example, a continuation treating the prompt as part of a listicle or FAQ page) and one plausible assistant response. Identify which post-training stage — SFT or preference learning — is most responsible for the difference.
-2. **(Practitioner)** Take the same prompt and predict how the two models diverge in *shape*, not just content: response length, whether the model addresses the reader, whether it hedges or adds safety caveats. For each divergence, state whether demonstration data (format) or preference comparisons (calibration and tone) is the more likely source, and why the distinction matters when diagnosing unwanted model behavior.
+1. **(Curiosity)** For the prompt "What are three good exercises for lower-back pain?", write one plausible base-model continuation that is *not* an answer (for example, a continuation treating the prompt as part of a listicle or FAQ page) and one plausible assistant response. Identify which post-training stage — SFT or preference learning — is most responsible for the difference.
+2. **(Builder)** Take the same prompt and predict how the two models diverge in *shape*, not just content: response length, whether the model addresses the reader, whether it hedges or adds safety caveats. For each divergence, state whether demonstration data (format) or preference comparisons (calibration and tone) is the more likely source, and why the distinction matters when diagnosing unwanted model behavior.
 3. **(Expert)** Consider the KL-regularized objective as $$\beta \to 0$$. Characterize the resulting optimization problem, and explain the failure sequence: why the policy migrates off the distribution where $$r_\phi$$ was trained, why the reward model's scores become unreliable exactly there, and what the resulting outputs look like (degenerate, repetitive, or adversarial completions with high proxy reward). State briefly what the opposite limit $$\beta \to \infty$$ recovers, and why useful values of $$\beta$$ must therefore be interior.
 
 ## Checklist

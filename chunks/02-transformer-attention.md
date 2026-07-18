@@ -16,7 +16,7 @@ nav_order: 3
 
 ---
 
-## Beginner
+## Curiosity
 
 Consider the sentence "The trophy didn't fit in the suitcase because it was too big." Resolving what "it" refers to requires relating that word to "trophy" and "suitcase" — words that appeared earlier and are not adjacent to it. Attention is the mechanism by which a model performs this relating: for each token, the model computes a relevance score against every other token in the context, converts those scores into weights, and builds an updated representation of the token as a weighted combination of the others. In the example, a well-trained model assigns high weight from "it" to "trophy" and "suitcase" and low weight to function words such as "because." The process resembles a reader glancing back at earlier phrases to decide what a pronoun means, except that it happens for every token at once.
 
@@ -26,7 +26,7 @@ The Transformer, introduced by Vaswani et al. (2017) under the title "Attention 
 
 Direct pairwise access is one mechanism behind a model's ability to use material from early in a long context rather than only the most recent text. It is not a guarantee of perfect recall, for reasons developed in the next tier.
 
-## Practitioner
+## Builder
 
 The operational fact is this: every token in the context is compared against every other token in the context, at every layer, whenever the model runs. This comparison is the dominant computation in serving a language model, and its cost grows with the square of the context length in the vanilla formulation. A conversation of $$n$$ tokens induces an $$n \times n$$ grid of pairwise comparisons per layer:
 
@@ -94,8 +94,8 @@ Attention cost is one factor among several in these decisions — chunk 06 treat
 
 ## Exercises
 
-1. **(Beginner)** For the sentence "The lawyer questioned the witness because she was confused," list the tokens that "she" should attend to most strongly and state what information the attention weights would need to encode to resolve the ambiguity. Then explain, using "dog bites man" versus "man bites dog," why a model with attention but no positional encoding could not distinguish the two sentences.
-2. **(Practitioner)** A conversation grows from $$n$$ tokens to $$2n$$ tokens. State how the attention computation scales in the vanilla formulation, and explain what a user observes in (a) time to first token and (b) input-token cost per request. Then list two interventions that reduce the effective context length and identify, for each, which of the two observable effects it improves.
+1. **(Curiosity)** For the sentence "The lawyer questioned the witness because she was confused," list the tokens that "she" should attend to most strongly and state what information the attention weights would need to encode to resolve the ambiguity. Then explain, using "dog bites man" versus "man bites dog," why a model with attention but no positional encoding could not distinguish the two sentences.
+2. **(Builder)** A conversation grows from $$n$$ tokens to $$2n$$ tokens. State how the attention computation scales in the vanilla formulation, and explain what a user observes in (a) time to first token and (b) input-token cost per request. Then list two interventions that reduce the effective context length and identify, for each, which of the two observable effects it improves.
 3. **(Expert)** Let a two-token sequence have queries $$q_1 = (1, 0)$$, $$q_2 = (0, 1)$$, keys $$k_1 = (1, 0)$$, $$k_2 = (1, 1)$$, and values $$v_1 = (1, 0)$$, $$v_2 = (0, 2)$$, with $$d_k = 2$$. Compute the scaled logits $$q_i \cdot k_j / \sqrt{2}$$, the softmax attention weights for each position, and the two output vectors. Then recompute the output at position 1 under a causal mask and explain why it differs from the unmasked case.
 
 ## Checklist

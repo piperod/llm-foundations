@@ -16,7 +16,7 @@ nav_order: 4
 
 ---
 
-## Beginner
+## Curiosity
 
 Pretraining is the first and largest stage of building a language model. The model defined in chunk 00 — a learned distribution over the next token — is fit to a corpus assembled from a substantial fraction of publicly available text: web pages, books, articles, and source code. Training proceeds by prediction and correction. At every position in every document, the model predicts the next token; the prediction is compared with the actual token; and the model's parameters are adjusted slightly to make that error smaller. Repeated across trillions of tokens, this single procedure is the origin of essentially all of a base model's capability. There is no separate stage in which the model is taught grammar, facts, or programming; whatever it must represent to predict well, it acquires as a side effect of the objective.
 
@@ -24,7 +24,7 @@ The central empirical finding about this process is its predictability. Research
 
 Two familiar product facts follow directly. First, model families ship in tiers — small, fast, and inexpensive through large, slow, and capable — because size is a controllable input whose effects on capability and cost are quantified rather than guessed. Second, every model has a knowledge cutoff, because the training corpus is collected at a specific point in time; text that did not exist at collection contributes nothing to the model's parameters, so events, libraries, and people that appeared afterward are absent from it entirely.
 
-## Practitioner
+## Builder
 
 Two studies define the operational picture of how labs allocate a training budget.
 
@@ -66,8 +66,8 @@ Two questions remain genuinely open. First, the data constraint: if high-quality
 
 ## Exercises
 
-1. **(Beginner)** A colleague asks a model about a Python library released three months after the model's knowledge cutoff, receives a confident but wrong answer, and concludes the model is "lying." Explain, in terms of how the pretraining corpus is collected, why the model cannot know about the library, and why its confident tone is unrelated to whether it was trained on the topic.
-2. **(Practitioner)** A teammate insists on using an older 175B-parameter model over a newer 70B-parameter one because "more parameters means smarter." Write a three-to-four-sentence reply using the Chinchilla-versus-Gopher result: state why parameter count alone does not rank capability, and name at least two other training-time factors that determine model quality.
+1. **(Curiosity)** A colleague asks a model about a Python library released three months after the model's knowledge cutoff, receives a confident but wrong answer, and concludes the model is "lying." Explain, in terms of how the pretraining corpus is collected, why the model cannot know about the library, and why its confident tone is unrelated to whether it was trained on the topic.
+2. **(Builder)** A teammate insists on using an older 175B-parameter model over a newer 70B-parameter one because "more parameters means smarter." Write a three-to-four-sentence reply using the Chinchilla-versus-Gopher result: state why parameter count alone does not rank capability, and name at least two other training-time factors that determine model quality.
 3. **(Expert)** Assume a training budget of $$C = 10^{23}$$ FLOPs, the approximation $$C \approx 6ND$$, and the Chinchilla-optimal ratio $$D \approx 20N$$. Solve for the compute-optimal $$N$$ and $$D$$. Then suppose the model will serve billions of queries: explain why a deployment-aware lab might instead train a model half that size on correspondingly more tokens, and identify which cost the Chinchilla analysis does not account for.
 
 ## Checklist

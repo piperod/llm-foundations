@@ -16,7 +16,7 @@ nav_order: 8
 
 ---
 
-## Beginner
+## Curiosity
 
 Chunk 00 established that at each generation step the model computes a probability distribution over its entire vocabulary. Decoding is what happens next: one token must be selected from that distribution. The selection rule is not part of the model. It is a policy applied to the model's output, and different policies produce visibly different text from the same underlying distribution.
 
@@ -28,7 +28,7 @@ Three controls adjust this draw. **Temperature** reshapes the distribution befor
 
 One consequence matters immediately: because selection involves a randomized draw, submitting the same prompt twice can legitimately produce different wording, structure, or conclusions. This is expected behavior of a sampled system, not a malfunction.
 
-## Practitioner
+## Builder
 
 LLM APIs expose this machinery primarily through two parameters, `temperature` and `top_p` (some also expose `top_k`). They act at different points in the pipeline: temperature rescales the raw logits before the softmax converts them to probabilities, while top-k and top-p truncate the resulting candidate pool before the draw. When both are set, the distribution is reshaped first and truncated second, so the two compose. A common operational error is moving both aggressively at once, which makes the effect of either one difficult to attribute; the standard advice is to tune one while holding the other at its default.
 
@@ -77,8 +77,8 @@ Decoding explains a failure mode every agent builder encounters: an identical pr
 
 ## Exercises
 
-1. **(Beginner)** Construct a toy distribution over five next words with probabilities summing to 1 (for example 0.40, 0.25, 0.15, 0.12, 0.08). State what greedy decoding selects, then simulate three sampling runs using a random-number table or die. Explain why two runs that agree on the first token can still diverge by the third.
-2. **(Practitioner)** Choose `temperature` and `top_p` values for three tasks — generating a code patch, brainstorming twenty feature ideas, and extracting dates from contracts into JSON — and justify each choice in terms of whether output variation is a cost or a benefit for that task. State which of the three still requires structural validation even at your chosen settings, and why.
+1. **(Curiosity)** Construct a toy distribution over five next words with probabilities summing to 1 (for example 0.40, 0.25, 0.15, 0.12, 0.08). State what greedy decoding selects, then simulate three sampling runs using a random-number table or die. Explain why two runs that agree on the first token can still diverge by the third.
+2. **(Builder)** Choose `temperature` and `top_p` values for three tasks — generating a code patch, brainstorming twenty feature ideas, and extracting dates from contracts into JSON — and justify each choice in terms of whether output variation is a cost or a benefit for that task. State which of the three still requires structural validation even at your chosen settings, and why.
 3. **(Expert)** For logits $$z = (2.0, 1.0, 0.0)$$ over a three-token vocabulary, compute the softmax distribution at $$T = 0.5$$, $$T = 1$$, and $$T = 2$$. Confirm that the ranking is unchanged in all three cases, and describe how the probability of the top token behaves as $$T \to 0$$ and as $$T \to \infty$$.
 
 ## Checklist

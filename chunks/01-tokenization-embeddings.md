@@ -16,7 +16,7 @@ nav_order: 2
 
 ---
 
-## Beginner
+## Curiosity
 
 A language model does not operate on words. Before any prediction occurs, input text is segmented into **tokens**: units drawn from a fixed inventory decided before training. A token may be a whole common word ("the", "cat"), a fragment of a longer one ("token" + "ization"), a punctuation mark, or a single character. As a rough guide, one token corresponds to about three quarters of an English word, though the ratio varies considerably with language and content.
 
@@ -26,7 +26,7 @@ Tokens are discrete symbols; the model's arithmetic requires numbers. Each token
 
 Two everyday consequences follow. Services priced "per token" are not priced per word. And unusual spellings, rare names, and non-Latin scripts often segment in unexpected ways — which is one mechanism behind familiar failures such as miscounting the letters in an uncommon word.
 
-## Practitioner
+## Builder
 
 Tokens are the unit of every quantity a practitioner manages: training data volume, context-window capacity, and billing are all denominated in tokens. Word counts correlate with token counts but diverge systematically, and the divergences concentrate precisely where cost and reliability matter.
 
@@ -85,10 +85,10 @@ Chunk 00 established that everything influencing generation enters through one c
 
 ## Exercises
 
-1. **(Beginner)** Select a sentence containing at least one proper noun and one uncommon word (for example, "Ximena refactored the anachronistic parser"). Predict the token count and where the splits fall, then verify with any public tokenizer-visualization tool. Explain why the token count exceeds the word count.
-2. **(Practitioner)** A 1,500-word English document is sent as input, and the model returns a 300-word summary. Using the prose heuristic of roughly three quarters of a word per token, estimate the input and output token counts, then compute the total cost at hypothetical prices of $3 per million input tokens and $15 per million output tokens. State two properties of the document (language, format, or content) that would make the estimate an undercount, and roughly by what factor.
+1. **(Curiosity)** Select a sentence containing at least one proper noun and one uncommon word (for example, "Ximena refactored the anachronistic parser"). Predict the token count and where the splits fall, then verify with any public tokenizer-visualization tool. Explain why the token count exceeds the word count.
+2. **(Builder)** A 1,500-word English document is sent as input, and the model returns a 300-word summary. Using the prose heuristic of roughly three quarters of a word per token, estimate the input and output token counts, then compute the total cost at hypothetical prices of $3 per million input tokens and $15 per million output tokens. State two properties of the document (language, format, or content) that would make the estimate an undercount, and roughly by what factor.
 3. **(Expert)** Take the corpus {"hug" × 10, "pug" × 5, "hugs" × 5}, initialized as characters. Compute the pair frequencies, perform the first three BPE merges by hand, and write out the resulting vocabulary. Then segment the unseen word "pugs" using your merges, and explain why BPE has no unknown-token failure mode when the base vocabulary covers all characters.
-4. **(Beginner)** Suppose an embedding space had three interpretable dimensions — *medical*, *formal register*, *person* — and the following vectors: "surgeon" = [1.0, 0.8, 1.0], "scalpel" = [1.0, 0.5, 0.0], "chat" = [0.0, 0.1, 0.0]. Propose plausible vectors for "physician" and "hospital", and identify a word pair whose difference vector would approximate the *medical* direction. Then state the caveat that makes this exercise an idealization: real learned embedding dimensions are not individually interpretable — semantic structure is distributed across directions in the space, recoverable only in aggregate (as the nearest-neighbor structure in the Try-it activity shows).
+4. **(Curiosity)** Suppose an embedding space had three interpretable dimensions — *medical*, *formal register*, *person* — and the following vectors: "surgeon" = [1.0, 0.8, 1.0], "scalpel" = [1.0, 0.5, 0.0], "chat" = [0.0, 0.1, 0.0]. Propose plausible vectors for "physician" and "hospital", and identify a word pair whose difference vector would approximate the *medical* direction. Then state the caveat that makes this exercise an idealization: real learned embedding dimensions are not individually interpretable — semantic structure is distributed across directions in the space, recoverable only in aggregate (as the nearest-neighbor structure in the Try-it activity shows).
 
 ## Checklist
 

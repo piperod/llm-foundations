@@ -19,8 +19,8 @@ Understanding the mechanisms changes how you work: what you expect from the tool
 
 Eleven chunks, numbered 00 through 10, each covering one mechanism. Every chunk has the same structure:
 
-- **Beginner** — the concept in plain language, assuming no technical background
-- **Practitioner** — the operational knowledge for someone who uses LLMs daily
+- **Curiosity** — the concept in plain language, for the reader who wants to understand what is happening; assumes no technical background
+- **Builder** — the operational knowledge for someone who works with LLMs daily and needs to reason about cost, reliability, and behavior
 - **Expert** — the formal treatment: definitions, equations, primary papers, and open research questions
 - **Implications for agentic-dev** — the specific practice each mechanism explains
 - **Exercises** — short problems spanning the three tiers

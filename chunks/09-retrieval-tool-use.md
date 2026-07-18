@@ -16,7 +16,7 @@ nav_order: 10
 
 ---
 
-## Beginner
+## Curiosity
 
 A language model answering from its weights alone is limited in two structural ways. First, its knowledge is frozen: everything it can state was encoded during training, so events after the training cutoff, private data, and the contents of any specific codebase are simply absent. Second, its knowledge is unverifiable in the moment: as chunk 08 established, the model produces fluent output whether or not the underlying fact was well represented in training, and it cannot pause to check. The situation is comparable to a closed-book exam; retrieval converts it into an open-book one, where the facts are looked up rather than recalled.
 
@@ -26,7 +26,7 @@ A language model answering from its weights alone is limited in two structural w
 
 Both mechanisms change the model's role. Instead of serving as a self-contained store of facts, it serves as a coordinator: it decides when external information or computation is needed, formulates the request, and integrates what comes back. This is one mechanism behind the reliability of production systems built on models — not the entire solution to hallucination, but a substantial and inspectable part of it.
 
-## Practitioner
+## Builder
 
 The mechanics of a tool call are worth stating exactly, because the model executes nothing itself. The developer declares the available tools in the API request: each tool has a name, a natural-language description, and a schema (typically JSON Schema) for its arguments. During generation, the model may emit, in place of ordinary text, a structured object naming a tool and supplying arguments. The calling application intercepts that object, executes the corresponding operation — an HTTP request, a database query, a file read — and appends the result to the model's context as an observation. Generation then resumes, and the model may call another tool or produce a final answer. The model's contribution is entirely the decision to call, the choice of tool, and the arguments; execution and result-passing are conventional software.
 
@@ -82,15 +82,15 @@ The mechanisms above are the direct engineering basis of Claude Code's operation
 
 - **Tool definitions are the structured-output contract in production.** Every tool Claude Code exposes — Read, Edit, Bash, Grep, and MCP-provided tools alike — carries a JSON schema for its name and parameters. A "decision to read a file" is the emission of a schema-conformant call object, the behavior that tool-use post-training makes reliable and constrained decoding makes parseable.
 - **MCP servers are standardized retrieval and tool endpoints.** An MCP server advertising callable capabilities with declared schemas, discoverable at runtime, is the protocol-level generalization of Toolformer's fixed API roster and ReAct's fixed action set.
-- **The agent loop is a ReAct trajectory.** A debugging session — stated intent, a Grep call, returned matches appended to context, a follow-up Read — is structurally the thought/action/observation trace of the Practitioner example, running against a codebase instead of a search index.
+- **The agent loop is a ReAct trajectory.** A debugging session — stated intent, a Grep call, returned matches appended to context, a follow-up Read — is structurally the thought/action/observation trace of the Builder example, running against a codebase instead of a search index.
 - **Grounding mitigates hallucination, with a propagation caveat.** File contents and command output in context substitute retrieved evidence for parametric guesswork about a codebase (chunk 08 covers why the parametric guess fails). The caveat from the Expert tier applies directly: a stale file read or a misleading grep result is a retrieval error, and the generator will elaborate on it as confidently as on a correct one.
 
 ---
 
 ## Exercises
 
-1. **(Beginner)** List three questions a model cannot reliably answer from parametric memory alone (consider training cutoffs, private data, and long-tail facts), and state for each whether retrieval, a non-retrieval tool, or both would address it.
-2. **(Practitioner)** Write a plausible ReAct trace, in the thought/action/observation format of the worked example, for the task "find out why `parse_config()` throws a `KeyError` in this repository," using a tool set of `grep(pattern)`, `read(path)`, and `run(command)`. The trace should reach a diagnosis in three to five actions, and each thought should justify the next action from the preceding observation.
+1. **(Curiosity)** List three questions a model cannot reliably answer from parametric memory alone (consider training cutoffs, private data, and long-tail facts), and state for each whether retrieval, a non-retrieval tool, or both would address it.
+2. **(Builder)** Write a plausible ReAct trace, in the thought/action/observation format of the worked example, for the task "find out why `parse_config()` throws a `KeyError` in this repository," using a tool set of `grep(pattern)`, `read(path)`, and `run(command)`. The trace should reach a diagnosis in three to five actions, and each thought should justify the next action from the preceding observation.
 3. **(Expert)** Assume a generator $$P_\theta(y \mid x, z)$$ that answers perfectly whenever the passage $$z$$ contains the answer. Identify two distinct ways the RAG-Sequence marginalization can still assign high probability to a wrong answer: (a) the correct passage is outside the top-$$k$$ support of $$P_\eta$$, and (b) retrieved passages conflict and the retriever's weights $$P_\eta(z \mid x)$$ favor the wrong one. For each, state which component you would modify and why increasing $$k$$ is not a complete fix for either.
 
 ## Checklist

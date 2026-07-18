@@ -16,7 +16,7 @@ nav_order: 11
 
 ---
 
-## Beginner
+## Curiosity
 
 Every prior chunk treated a single exchange: an input goes in, a response comes out, and the interaction ends. An **agent** is a language model used repeatedly. The system examines the current state of a task, selects one small action — running a search, editing a file, executing a command — performs it, observes the result, and selects the next action from the updated state, continuing until the task is complete or abandoned. The loop is the new element; the model inside it is the same next-token predictor introduced in chunk 00. The arrangement resembles a new employee working through an unfamiliar project one task at a time, checking each result before choosing the next.
 
@@ -24,7 +24,7 @@ Three failure modes distinguish this arrangement from single-exchange use, and n
 
 Each tendency traces to mechanisms established earlier in the curriculum. Generation proceeds one token at a time with no ability to revise earlier commitments; memory is limited to a finite context window; and the model's confidence in its own output is not a reliable indicator of correctness. Agents remain highly useful despite all three tendencies. Using them well requires managing these mechanisms deliberately rather than trusting the loop to correct itself.
 
-## Practitioner
+## Builder
 
 The operational difference between chat and agents is that a single-turn error is a one-time cost while a multi-step error is a compounding one. In chat, a hallucination or misreading surfaces immediately and the user corrects it in the next turn. In an agent loop, the same error is written into the context, conditioned on by every subsequent step, and can steer the trajectory for twenty more steps before anyone notices — because each individual step, viewed alone, is a locally reasonable continuation of what precedes it.
 
@@ -93,8 +93,8 @@ Each mechanism in this curriculum corresponds to a specific agentic-dev practice
 
 ## Exercises
 
-1. **(Beginner)** Trace the agent loop by hand for the task "find and fix a broken link on a website": write five action–observation steps. Then mark one step where a wrong conclusion would propagate to later steps, one point where accumulated output could bury the original goal, and one step where the objective could drift without any visible error.
-2. **(Practitioner)** Rewrite the vague agent task "clean up the authentication code" as a sequence of four narrow steps, each with an objectively checkable completion criterion (a passing test, a reviewable diff, a lint report). For each rewritten step, state which ambiguity in the original phrasing it eliminates.
+1. **(Curiosity)** Trace the agent loop by hand for the task "find and fix a broken link on a website": write five action–observation steps. Then mark one step where a wrong conclusion would propagate to later steps, one point where accumulated output could bury the original goal, and one step where the objective could drift without any visible error.
+2. **(Builder)** Rewrite the vague agent task "clean up the authentication code" as a sequence of four narrow steps, each with an objectively checkable completion criterion (a passing test, a reviewable diff, a lint report). For each rewritten step, state which ambiguity in the original phrasing it eliminates.
 3. **(Expert)** Compute the trajectory success probability $$p^n$$ for $$(p, n) \in \{(0.99, 10), (0.95, 10), (0.95, 20), (0.90, 20)\}$$. Then, for the $$p = 0.95$$, $$n = 20$$ case, suppose a single checkpoint placed after step $$k$$ detects any accumulated error and allows retrying only the failed segment: determine which $$k$$ most improves the expected outcome, and explain how positively correlated step failures (rather than independent ones) change the value of the checkpoint.
 
 ## Checklist
