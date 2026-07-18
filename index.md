@@ -17,7 +17,7 @@ Understanding the mechanisms changes how you work: what you expect from the tool
 
 ## How this works: chunks
 
-Eleven chunks, numbered 00 through 10, each covering one mechanism. Every chunk has the same structure:
+A core sequence of eleven chunks, numbered 00 through 10, each covering one mechanism, followed by two applied supplements (11 · Tokenomics, 12 · Security & Key Exfiltration) that put the mechanisms to work on cost and security. Every chunk has the same structure:
 
 - **Curiosity** — the concept in plain language, for the reader who wants to understand what is happening; assumes no technical background
 - **Builder** — the operational knowledge for someone who works with LLMs daily and needs to reason about cost, reliability, and behavior
