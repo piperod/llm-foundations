@@ -10,3 +10,157 @@
   };
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  /* Collapsible section blocks (built at load from each h2) */
+  details.section-block {
+    margin: 0.75rem 0 1.25rem;
+    border-top: 1px solid #e5e7eb;
+  }
+  details.section-block > summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: baseline;
+    gap: 0.45em;
+    outline: none;
+  }
+  details.section-block > summary::-webkit-details-marker { display: none; }
+  details.section-block > summary::before {
+    content: "\25B8"; /* ▸ */
+    color: #64748b;
+    font-size: 0.85em;
+    line-height: 1;
+    flex: 0 0 auto;
+    transform: translateY(0.05em);
+  }
+  details.section-block[open] > summary::before { content: "\25BE"; /* ▾ */ }
+  details.section-block > summary:hover::before { color: #2563eb; }
+  details.section-block > summary > h2 {
+    margin: 0.4rem 0;
+    border-bottom: none;
+    display: inline;
+  }
+  /* Tier sections read as the primary structure */
+  details.section-block.tier > summary > h2 { color: #1e3a8a; }
+  details.section-block > summary:hover > h2 { color: #2563eb; }
+
+  .section-toggle-controls {
+    margin: 0.5rem 0 1rem;
+    font-size: 0.8rem;
+  }
+  .section-toggle-controls button {
+    background: none;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    color: #475569;
+    padding: 0.15rem 0.6rem;
+    margin-right: 0.4rem;
+    cursor: pointer;
+  }
+  .section-toggle-controls button:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+  }
+</style>
+
+<script>
+  (function () {
+    var TIERS = { "Curiosity": 1, "Builder": 1, "Expert": 1 };
+
+    function textLabel(h) {
+      // heading text minus any injected anchor-link glyph
+      return (h.textContent || "").replace(/¶/g, "").trim();
+    }
+
+    function build() {
+      var main = document.querySelector(".main-content");
+      if (!main || main.dataset.sectionsCollapsible) return;
+      main.dataset.sectionsCollapsible = "1";
+
+      var headings = Array.prototype.slice.call(main.querySelectorAll("h2"));
+      if (!headings.length) return;
+
+      headings.forEach(function (h) {
+        if (h.closest("summary")) return; // already wrapped
+
+        var details = document.createElement("details");
+        details.className = "section-block";
+        details.open = true;
+        if (TIERS[textLabel(h)]) details.className += " tier";
+
+        var summary = document.createElement("summary");
+
+        // collect the nodes that belong to this section (up to the next h2)
+        var moved = [];
+        var node = h.nextSibling;
+        while (node && !(node.nodeType === 1 && node.tagName === "H2")) {
+          var next = node.nextSibling;
+          moved.push(node);
+          node = next;
+        }
+
+        h.parentNode.insertBefore(details, h);
+        summary.appendChild(h); // keep original <h2> (id + anchor) as the toggle
+        details.appendChild(summary);
+        moved.forEach(function (n) { details.appendChild(n); });
+
+        // drop a trailing <hr> so the divider doesn't sit inside the fold
+        for (var i = details.childNodes.length - 1; i >= 0; i--) {
+          var c = details.childNodes[i];
+          if (c.nodeType === 1 && c.tagName === "HR") { details.removeChild(c); break; }
+          if (c.nodeType === 3 && !c.textContent.trim()) continue;
+          break;
+        }
+      });
+
+      // Expand all / Collapse all controls
+      var blocks = main.querySelectorAll("details.section-block");
+      if (blocks.length > 1) {
+        var bar = document.createElement("div");
+        bar.className = "section-toggle-controls";
+        var expand = document.createElement("button");
+        expand.type = "button";
+        expand.textContent = "Expand all";
+        var collapse = document.createElement("button");
+        collapse.type = "button";
+        collapse.textContent = "Collapse all";
+        expand.addEventListener("click", function () {
+          main.querySelectorAll("details.section-block").forEach(function (d) { d.open = true; });
+        });
+        collapse.addEventListener("click", function () {
+          main.querySelectorAll("details.section-block").forEach(function (d) { d.open = false; });
+        });
+        bar.appendChild(expand);
+        bar.appendChild(collapse);
+        blocks[0].parentNode.insertBefore(bar, blocks[0]);
+      }
+
+      // if the page was opened with an anchor inside a section, open it
+      if (location.hash) {
+        var target = main.querySelector(location.hash);
+        if (target) {
+          var d = target.closest("details.section-block");
+          if (d) { d.open = true; target.scrollIntoView(); }
+        }
+      }
+    }
+
+    // open the containing section when an in-page anchor is followed
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest('a[href^="#"]');
+      if (!a) return;
+      var id = a.getAttribute("href").slice(1);
+      if (!id) return;
+      var el = document.getElementById(id);
+      var d = el && el.closest("details.section-block");
+      if (d) d.open = true;
+    });
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", build);
+    } else {
+      build();
+    }
+  })();
+</script>
