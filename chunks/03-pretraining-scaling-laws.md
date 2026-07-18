@@ -36,6 +36,8 @@ This is also why model families ship in tiers rather than one size. Each tier oc
 
 A knowledge cutoff, operationally, means the model received zero gradient signal from anything that became text after the corpus was assembled. The model is not vaguely uncertain about recent events; it is structurally blind to them, in the same way it is blind to a private codebase it was never shown. Retrieval and tool use (chunk 09) exist to patch this gap at inference time without retraining.
 
+> **Try it.** The [FineWeb report](https://huggingface.co/spaces/HuggingFaceFW/blogpost-fineweb-v1) documents a real open pretraining corpus — roughly 15 trillion tokens extracted from web crawls — including the deduplication and quality-filtering pipeline that produced it. Skim the filtering sections and note how much of the raw crawl is discarded, and on what criteria. The corpus a model is trained on is a sequence of engineering decisions, and the knowledge cutoff discussed above is simply the date this pipeline last ran.
+
 ## Expert
 
 Pretraining minimizes the autoregressive cross-entropy objective defined in chunk 00, averaged over a corpus on the order of $$10^{11}$$–$$10^{13}$$ tokens. Kaplan et al. (2020) measured how the resulting loss $$L$$ depends on non-embedding parameter count $$N$$ and dataset size $$D$$, finding approximate power laws — $$L(N) \propto N^{-0.076}$$ when data is not the bottleneck, and $$L(D) \propto D^{-0.095}$$ when model size is not — together with a joint form combining the two. Extrapolating along their fitted compute frontier assigned most of each increment of compute to $$N$$ rather than $$D$$, a prescription reflected in GPT-3's configuration (Brown et al., 2020): 175B parameters, ~300B tokens.

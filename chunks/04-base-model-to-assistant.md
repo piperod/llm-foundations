@@ -43,6 +43,8 @@ The same process explains why an assistant has a consistent style at all. Demons
 
 Two operational consequences follow. First, when a model declines a task it is demonstrably capable of, the refusal is a post-training decision rather than a capability gap; the underlying knowledge is intact. Second, many jailbreaks operate by constructing prompts that shift the model back toward base-model-like completion behavior, working around the assistant persona rather than through it. Both observations follow from the same fact: assistant behavior is a trained disposition layered over the base distribution, not a filter applied after generation.
 
+> **Try it.** Browse the [UltraChat dataset](https://huggingface.co/datasets/HuggingFaceH4/ultrachat_200k), an open corpus of the kind used for supervised fine-tuning. Inspect a few records: each is a multi-turn conversation in exactly the format an assistant is expected to produce. The consistent voice, the willingness to answer questions rather than continue them, and the turn-taking structure of every assistant model trace back to training data of this shape — the demonstration phase of the pipeline formalized in the Expert tier below.
+
 ## Expert
 
 **Supervised fine-tuning.** The pretrained model is fine-tuned with the standard next-token cross-entropy loss on curated (prompt, response) pairs written or selected by labelers. SFT teaches format and style but has two structural limits: it scales only as fast as humans can write good demonstrations, and it cannot easily encode comparative judgments — "this response is better than that one" has no natural expression as a single demonstration. Preference learning addresses both.

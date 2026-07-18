@@ -48,6 +48,8 @@ Three consequences are directly observable when using a model through an API or 
 
 These consequences convert into concrete practices. When a long session becomes slow or begins missing earlier instructions, the remedies all operate by reducing the effective $$n$$: trim history that no longer bears on the task, summarize large documents instead of re-pasting them in full, and state instructions concisely and near the point where they apply. Each intervention reduces both the quadratic compute term and the number of tokens competing for attention weight.
 
+> **Try it.** [BertViz](https://github.com/jessevig/bertviz) renders the attention weights of a real transformer as connection lines between tokens; the repository links an interactive tutorial that runs in the browser. In the head view, enter a sentence with an ambiguous word — "she trained the model on new data" against "the model walked the runway" — and inspect which tokens *model* attends to in each. Then switch heads and layers: different heads exhibit visibly different patterns (positional, syntactic, coreference-like), a concrete instance of the multi-head design formalized in the Expert tier below.
+
 ## Expert
 
 Self-attention maps an input sequence $$X \in \mathbb{R}^{n \times d_{\text{model}}}$$ to a new sequence of the same length. Three learned projection matrices produce queries, keys, and values:
