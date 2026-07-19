@@ -27,6 +27,7 @@ footer_content: >-
 
 exclude:
   - notes/
+  - presentation/
   - Gemfile
   - Gemfile.lock
   - vendor/
