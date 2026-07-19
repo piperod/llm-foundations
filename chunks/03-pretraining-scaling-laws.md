@@ -10,6 +10,8 @@ nav_order: 4
 **Previously.** Chunk 02 covered the transformer and self-attention — the architecture that processes a sequence of tokens.
 **Today.** How that architecture is trained at internet scale; the Kaplan and Chinchilla scaling results; the compute-optimal allocation of parameters versus tokens; and what these results imply for model tiers and knowledge cutoffs.
 
+> **Through-line.** Movement I. Pretraining is the first and largest force that carves the distribution, writing it into the weights from raw text; scaling laws say how sharply.
+
 ![Three log-log panels showing test loss decreasing smoothly as a power law with compute, dataset size, and number of parameters, from Kaplan et al. 2020.](https://ar5iv.labs.arxiv.org/html/2001.08361/assets/x1.png)
 
 *Figure 1: Test loss falls as a smooth power law with each of compute, dataset size, and model parameters, holding across seven orders of magnitude. Source: "Scaling Laws for Neural Language Models," Kaplan, McCandlish, Henighan, et al. (OpenAI, 2020) — https://ar5iv.labs.arxiv.org/html/2001.08361.*

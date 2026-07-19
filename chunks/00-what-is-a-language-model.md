@@ -10,6 +10,8 @@ nav_order: 1
 **Previously.** Nothing. This is the start of the curriculum.
 **Today.** The autoregressive objective: what it is, how generation works as repeated sampling, and why the simplicity of the objective is a poor guide to the capability of the resulting system.
 
+> **Through-line.** This chunk defines the object the whole workshop reshapes: the distribution over the next token. Everything after it is a lever that moves probability mass around.
+
 ![Output token probabilities (logits) for GPT-2: a score for every token in the 50,257-token vocabulary, showing the model's full probability distribution over the next token.](https://jalammar.github.io/images/gpt2/gpt2-output-scores-2.png)
 
 *Figure 1: After processing the input, the model assigns a score to every token in its vocabulary; the resulting distribution is what generation samples from. Source: "The Illustrated GPT-2," Jay Alammar, 2019 — https://jalammar.github.io/illustrated-gpt2/.*

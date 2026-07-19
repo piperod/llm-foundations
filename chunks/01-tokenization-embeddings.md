@@ -10,6 +10,8 @@ nav_order: 2
 **Previously.** Chunk 00 defined a language model as a learned conditional distribution $$P(x_t \mid x_{<t})$$ over the next token, applied autoregressively, with the conditioning context as the sole channel of influence.
 **Today.** What a token is and why it is not a word; how subword algorithms (BPE, SentencePiece) construct vocabularies; the embedding matrix and its relation to earlier static embeddings; and the operational consequences — token-denominated cost, context budgets, and tokenization-induced failure modes.
 
+> **Through-line.** The distribution is over *tokens*, not words. Tokenization fixes the alphabet the distribution is defined on, and embeddings are the coordinates its input is read from.
+
 ![Color-coded embedding vectors for the words queen, woman, girl, boy, man, king, queen, and water, each shown as a row of 50 colored cells representing vector dimension values.](https://jalammar.github.io/images/word2vec/queen-woman-girl-embeddings.png)
 
 *Figure 1: Each word is represented as a vector of numbers (color-coded by value), and words with related meanings share similar patterns across dimensions. Source: "The Illustrated Word2vec," Jay Alammar, 2019 — https://jalammar.github.io/illustrated-word2vec/.*

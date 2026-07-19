@@ -10,6 +10,8 @@ nav_order: 11
 **Previously.** Chunk 09 covered retrieval-augmented generation and tool use — mechanisms for reading information and taking actions outside the model's weights.
 **Today.** The agent loop (act, observe, update context, repeat), planning and memory architectures, self-correction without weight updates, evaluation of multi-step trajectories, and the three failure modes — error compounding, context rot, and goal drift — that appear only when many LLM calls are chained. This is the capstone chunk: it introduces few new mechanisms and instead shows how the prior ones interact.
 
+> **Through-line.** Movement III. An agent reshapes its own distribution every step by writing its actions and observations back into the context; every lever in the workshop now compounds in a loop.
+
 ![Anthropic's "Autonomous agent" diagram: an LLM calls tools in a loop based on environmental feedback, with a human able to provide input, continuing until the task is complete.](https://www-cdn.anthropic.com/images/4zrzovbb/website/58d9f10c985c4eb5d53798dea315f7bb5ab6249e-2401x1000.png)
 
 *Figure 1: Anthropic's canonical "autonomous agent" diagram — an LLM in a loop, calling tools based on feedback from its environment until the task is complete. Source: "Building Effective AI Agents," Erik Schluntz and Barry Zhang, Anthropic, Dec 2024 — https://www.anthropic.com/research/building-effective-agents.*

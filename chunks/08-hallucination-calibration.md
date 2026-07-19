@@ -10,6 +10,8 @@ nav_order: 9
 **Previously.** Chunk 07 covered decoding and sampling — the mechanics by which a probability distribution over tokens becomes emitted text.
 **Today.** Why the text that decoding produces can be fluent, well-formed, and false; how that failure is measured; and which interventions reduce it.
 
+> **Through-line.** Movement III. Hallucination is what the distribution does where training left it under-constrained: it still concentrates on a fluent completion whether or not one is warranted.
+
 ![Calibration curves for language models of various sizes on BIG Bench multiple-choice tasks, with a dashed diagonal line indicating perfect calibration (stated confidence matches actual accuracy).](https://ar5iv.labs.arxiv.org/html/2207.05221/assets/x5.png)
 
 *Figure 1: Calibration curves for various model sizes on multiple-choice tasks from BIG Bench, with a dashed line marking perfect calibration. Source: "Language Models (Mostly) Know What They Know," Kadavath et al., Anthropic, 2022 (Figure 4, left panel) — https://ar5iv.labs.arxiv.org/html/2207.05221.*

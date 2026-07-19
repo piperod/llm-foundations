@@ -11,9 +11,9 @@ A prerequisite curriculum on how large language models work, written to be read 
 
 ## The idea
 
-Every practice in an agentic coding workflow is a response to a specific property of the underlying model. Context windows are limited because attention has a quadratic cost. Structured prompts with examples work because of in-context learning. Models refuse or comply consistently because of preference training, not hardcoded rules. Agents drift and compound errors over long sessions because each of these mechanisms reappears, repeatedly, inside a loop.
+One claim runs through the whole workshop: a language model does nothing but produce a probability distribution over the next token, and every technique — training, prompting, retrieval, tools, agent loops — is a lever that reshapes that distribution. You never program a language model; you shape a distribution. [The Through-Line](the-through-line/) develops this and is the recommended starting point.
 
-Understanding the mechanisms changes how you work: what you expect from the tool, what you verify before trusting its output, and which lever you reach for when something fails.
+Once the distribution is the object you are working on, the disparate practices of an agentic workflow stop being separate skills. Context windows are limited because attention has a quadratic cost. Structured prompts work because examples reshape the runtime distribution. Models turn sycophantic because preference training biased the distribution toward agreement and your stated opinion pulls it further. Understanding the mechanism changes how you work: what you expect, what you verify, and which lever you reach for when something fails.
 
 ## How this works: chunks
 

@@ -10,6 +10,8 @@ nav_order: 3
 **Previously.** Chunk 01 converted text into tokens and tokens into embedding vectors that encode meaning as position in a high-dimensional space.
 **Today.** Scaled dot-product attention, multi-head attention, causal masking, positional encoding, and the quadratic cost in sequence length that shapes how context is limited and priced.
 
+> **Through-line.** Attention is the computation that turns a context into a next-token distribution. Its quadratic cost is why *how much* context you use to reshape that distribution has a price.
+
 ![The Transformer's encoding component (a stack of encoders) and decoding component (a stack of decoders), each built from self-attention and feed-forward sub-layers.](https://jalammar.github.io/images/t/The_transformer_encoder_decoder_stack.png)
 
 *Figure 1: The Transformer's stacked encoder and decoder components, each layer built from self-attention and feed-forward sub-layers. Source: "The Illustrated Transformer," Jay Alammar, 2018 — https://jalammar.github.io/illustrated-transformer/.*

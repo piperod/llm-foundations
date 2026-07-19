@@ -10,6 +10,8 @@ nav_order: 12
 **Previously.** Chunk 10 closed the core curriculum with the agent loop: a frozen model invoked repeatedly, its context accumulating across turns. That loop is also where inference cost concentrates, which motivates treating cost as a subject in its own right.
 **Today.** The metered-token pricing model; the input/output price asymmetry and model-tier spreads; the three standard discounts (prompt caching, batching, model routing); a worked workload estimate; and the hardware-level cost drivers — prefill versus decode, KV-cache memory — that explain why the price sheet looks the way it does. Specific prices below were verified on official provider pages as of July 2026 and change frequently; the ratios and structures are the durable content.
 
+> **Through-line.** Applied supplement. Every token you add to the context to reshape the distribution is billed — and re-billed each turn. This chunk prices the context lever.
+
 ---
 
 ## Curiosity

@@ -10,6 +10,8 @@ nav_order: 10
 **Previously.** Chunk 08 covered hallucination and calibration: a model's parametric knowledge is frozen at training time, and its stated confidence is an unreliable guide to its correctness.
 **Today.** One major class of mitigations: retrieval-augmented generation (RAG) as a hybrid of parametric and non-parametric memory, tool use as a trained and elicited behavior, the ReAct control pattern, and the engineering that makes model-emitted tool calls machine-executable.
 
+> **Through-line.** Movement III. Retrieval and tools reshape the distribution by injecting fresh, grounded tokens into the context — external evidence added to the conditioning set.
+
 ![RAG architecture diagram: a query encoder and document index feed a Maximum Inner Product Search retriever, which passes top-K retrieved documents to a seq2seq generator that produces the final prediction.](https://ar5iv.labs.arxiv.org/html/2005.11401/assets/x1.png)
 
 *Figure 1: Overview of the RAG architecture — a pre-trained retriever (query encoder + document index, using MIPS to find top-K documents) is combined with a pre-trained seq2seq generator and fine-tuned end-to-end. Source: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks," Lewis et al., 2020 — https://ar5iv.labs.arxiv.org/html/2005.11401.*

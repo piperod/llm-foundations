@@ -10,6 +10,8 @@ nav_order: 13
 **Previously.** Chunk 00 established that instructions are just tokens in the conditioning context; chunk 05 established that in-context text steers behavior; chunk 09 gave the model the ability to act through tools; chunk 10 assembled these into agents.
 **Today.** The threat model for API keys, tokens, and credentials under an agent's reach; indirect prompt injection as the primary attack vector; the "lethal trifecta" decomposition; and why the defenses that work are deterministic gates rather than better instructions. This is an applied supplement, not new mechanism.
 
+> **Through-line.** Applied supplement. Untrusted text that reaches the context reshapes the distribution too: an attacker's tokens are levers pulled against you.
+
 ![The lethal trifecta: an AI agent becomes exploitable when it combines access to private data, exposure to untrusted content, and the ability to communicate externally.](https://static.simonwillison.net/static/2025/lethal-trifecta.jpg)
 
 *Figure 1: Simon Willison's "lethal trifecta" — the three capabilities whose combination enables data theft via prompt injection. Source: "The lethal trifecta for AI agents," Simon Willison, 16 June 2025 — https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/.*

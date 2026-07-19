@@ -10,6 +10,8 @@ nav_order: 6
 **Previously.** Chunk 04 covered how a base model becomes an assistant through SFT and RLHF: modifications made to the weights before deployment.
 **Today.** In-context learning after the weights are frozen: the phenomenon itself, the statistical and mechanistic theories proposed to explain it, and chain-of-thought prompting as a special case.
 
+> **Through-line.** Movement II. The lever moves from the weights to the context: examples and structure reshape the distribution at runtime with no retraining — and a user's stated opinion pulls on it the same way, the context half of sycophancy.
+
 ![Accuracy on a synthetic word-unscrambling task as a function of the number of in-context examples, comparing zero-shot/one-shot/few-shot regimes and model sizes (1.3B, 13B, 175B parameters), with and without a natural language prompt.](https://ar5iv.labs.arxiv.org/html/2005.14165/assets/graphs/img/in_context_learning.png)
 
 *Figure 1: Larger models make increasingly efficient use of in-context information — few-shot accuracy rises with the number of in-context examples, and the effect is far more pronounced for the largest (175B) model. Source: "Language Models are Few-Shot Learners" (GPT-3 paper), Brown et al., 2020 — https://ar5iv.labs.arxiv.org/html/2005.14165.*
